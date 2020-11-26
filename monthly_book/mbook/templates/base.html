@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width = device-width, initial-scale = 1, shrink-to-fit = no"
+      content="width = device-width, initial-scale = 1, shrink-to-fit = yes"
     />
     <link
       rel="stylesheet"
@@ -15,9 +15,7 @@
     />
   </head>
   <body>
-    <div class="container">
-      <h2>Basic Navbar</h2>
-      <nav class="navbar navbar-expand-sm navbar-dark bg-secondary">
+      <nav class="navbar navbar-expand-sm navbar-dark bg-info">
         <a class="navbar-brand" href="#">Monthly Book</a>
         <button
           class="navbar-toggler"
@@ -48,8 +46,10 @@
           </ul>
         </div>
       </nav>
-    </div>
-    {% block body %} {% endblock %}
+      <div class="container-fluid">
+        {% block body %} {% endblock %}
+      </div>
+    
     <!-- jQuery library -->
     <script
       src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
