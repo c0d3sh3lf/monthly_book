@@ -21,9 +21,10 @@ class Products(models.Model):
     product_code = models.CharField(max_length=191, unique=True)
     product_rate_per_unit = models.FloatField()
     product_ccy = models.CharField(max_length=3)
+    product_is_extra = models.BooleanField()
     date_added = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-
+    
     def __str__(self):
         return "{} - {}".format(self.product_name, self.product_code)
 

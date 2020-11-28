@@ -1,5 +1,37 @@
 {% extends 'base.html'%} 
 {% block title %} Monthly Book {% endblock %} 
 {% block body %}
-<h1>Hello World!</h1>
+    {% if user.is_authenticated %}
+        <h1>Welcome! You are now authenticated.</h1>
+    {% else %}
+        {% if error %}
+            <div class="alert alert-danger alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <strong>Error!</strong> {{error}}
+            </div>
+        {% endif %}
+        <div class="row">
+            <div class="col"><h1 align='center' class="display-1">Monthly Book</h1></div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col"></div>
+            <div class="col">
+                <form action='login/' method="POST" style="border: 1px solid black; border-radius:15px; padding: 20px;">
+                    <h2 align='center' class="display-4">Login</h2>
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" class="form-control" placeholder="Enter username here" id="username" name="username" />
+                    </div>
+                    <div class="form-group">
+                        <label for="password">password:</label>
+                        <input type="password" class="form-control" placeholder="Enter password here" id="password" name="password" />
+                    </div>
+                    <center><button type="submit" class="btn btn-primary">Login</button></center>
+                </form>
+            </div>
+            <div class="col"></div>
+        </div> 
+    {% endif %}
 {% endblock %}
