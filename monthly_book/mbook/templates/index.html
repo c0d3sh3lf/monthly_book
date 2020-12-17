@@ -1,37 +1,70 @@
 {% extends 'base.html'%} 
-{% block title %} Monthly Book {% endblock %} 
+{% block title %} Expense Book {% endblock title %} 
 {% block body %}
-    {% if user.is_authenticated %}
-        <h1>Welcome! You are now authenticated.</h1>
-    {% else %}
-        {% if error %}
-            <div class="alert alert-danger alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                <strong>Error!</strong> {{error}}
+    <div class="container-fluid">
+        <div class="row mt-5">
+            <div class="col-xl-4">
+                <div class = "card p-5">
+                    <div class = "card-body">
+                       <h5 class = "card-title center">Stores</h5>
+                       
+                       <p class = "card-text display-1 center text-success">
+                          {{ stores }}
+                       </p>
+                       <!-- <a href="#" class = "btn btn-info float-right">More Info</a> -->
+                    </div>
+                 </div>
             </div>
-        {% endif %}
-        <div class="row">
-            <div class="col"><h1 align='center' class="display-1">Monthly Book</h1></div>
+            <div class="col-xl-4">
+                <div class = "card p-5">
+                    <div class = "card-body">
+                       <h5 class = "card-title center">Products</h5>
+                       
+                       <p class = "card-text display-1 center text-warning">
+                        {{ products }}
+                       </p>
+                       <!-- <a href="#" class = "btn btn-info float-right">More Info</a> -->
+                    </div>
+                 </div>
+            </div>
+            <div class="col-xl-4">
+                <div class = "card p-5">
+                    <div class = "card-body">
+                       <h5 class = "card-title center">Transactions</h5>
+                       
+                       <p class = "card-text display-1 center text-primary">
+                        {{ transactions }}
+                       </p>
+                       <!-- <a href="#" class = "btn btn-info float-right">More Info</a> -->
+                    </div>
+                 </div>
+            </div>
         </div>
-        <hr>
-        <div class="row">
-            <div class="col"></div>
-            <div class="col">
-                <form action='login/' method="POST" style="border: 1px solid black; border-radius:15px; padding: 20px;">
-                    <h2 align='center' class="display-4">Login</h2>
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label for="username">Username:</label>
-                        <input type="text" class="form-control" placeholder="Enter username here" id="username" name="username" />
+        <div class="row mt-5">
+            <div class="col-xl-6">
+                <div class = "card p-5">
+                    <div class = "card-body">
+                       <h5 class = "card-title center">Total Transaction Value</h5>
+                       
+                       <p class = "card-text display-1 center text-danger">
+                          AED {{ total_txn_amt }}
+                       </p>
+                       <!-- <a href="#" class = "btn btn-info float-right">More Info</a> -->
                     </div>
-                    <div class="form-group">
-                        <label for="password">password:</label>
-                        <input type="password" class="form-control" placeholder="Enter password here" id="password" name="password" />
-                    </div>
-                    <center><button type="submit" class="btn btn-primary">Login</button></center>
-                </form>
+                 </div>
             </div>
-            <div class="col"></div>
-        </div> 
-    {% endif %}
-{% endblock %}
+            <div class="col-xl-6">
+                <div class = "card p-5">
+                    <div class = "card-body">
+                       <h5 class = "card-title center">Total Extra Value</h5>
+                       
+                       <p class = "card-text display-1 center text-dark">
+                          AED {{ total_extra_amt }}
+                       </p>
+                       <!-- <a href="#" class = "btn btn-info float-right">More Info</a> -->
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+{% endblock body %}

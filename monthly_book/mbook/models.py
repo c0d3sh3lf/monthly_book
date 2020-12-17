@@ -4,7 +4,7 @@ from django.utils import timezone
 
 # Create your models here.
 class Stores(models.Model):
-    store_name = models.TextField()
+    store_name = models.CharField(max_length=512)
     store_address = models.TextField()
     store_type = models.CharField(max_length=32)
     date_added = models.DateTimeField(default=timezone.now)
@@ -15,7 +15,7 @@ class Stores(models.Model):
 
 class Products(models.Model):
     product_name = models.TextField()
-    prodcut_desc = models.TextField()
+    product_desc = models.TextField()
     product_qty = models.FloatField()
     product_unit = models.CharField(max_length=16)
     product_code = models.CharField(max_length=191, unique=True)
