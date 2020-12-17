@@ -1,0 +1,67 @@
+{% extends 'base.html'%} 
+{% block title %} Products {% endblock title %} 
+{% block body %}
+    <div class="container mt-4">
+        <h2>Products</h2>
+        <hr/>
+        <button type="button" class="btn btn-dark float-right mb-1 mt-1" data-toggle="modal" data-target="#AddProductModal">
+            <i class="zmdi zmdi-plus-square"></i> Add Product
+        </button>
+        <div class="modal fade" id="AddProductModal" tabindex="-1"
+            role="dialog" aria-labelledby="AddProductModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="form">
+                <div class="modal-content">
+                    <form action="{% url 'mbook:add_product' %}" method="POST">
+                        <div class="modal-header">
+                            <h5 class = "modal-title" id = "AddProductModalLabel">Add Product</h5>
+                            <button type = "button" class = "close" data-dismiss = "modal" aria-label = "Close">
+                                <span aria-hidden = "true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                                {% csrf_token %}
+                                {{ products_form.as_p }}
+                        </div>
+                        <div class="modal-footer">
+                            <button type = "button" class = "btn btn-danger" data-dismiss = "modal">Close</button>
+                            <button type = "submit" class = "btn btn-success"><i class="zmdi zmdi-floppy"></i> Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Product Name</th>
+                    <th>Description</th>
+                    <th>Code</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                {% if products %}
+                    {% for product in products  %}
+                        <tr>
+                            <td align="right">{{ forloop.counter }}.</td>
+                            <td>{{ product.product_name }}</td>
+                            <td>{{ product.product_desc }}</td>
+                            <td>{{ product.product_code }}</td>
+                            <td align="right">
+                                <a href="#" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View"><i class="zmdi zmdi-eye"></i></a>
+                                <a href="{% url 'mbook:update_product' product.id %}" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit"><i class="zmdi zmdi-edit"></i></a>
+                                <a href="{% url 'mbook:delete_product' product.id %}" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove"><i class="zmdi zmdi-delete"></i></a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                        <tr>
+                            <td colspan="5">No Products found.</td>
+                        </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+{% endblock body %}

@@ -82,15 +82,27 @@ WSGI_APPLICATION = 'monthly_book.wsgi.application'
 #     }
 # }
 
+# Local MySQL Instance
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'OPTIONS': {
+#             'read_default_file': '/etc/my.cnf',
+#         },
+#     }
+# }
+
+# Docker MySQL Instance
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'read_default_file': '/etc/my.cnf',
-        },
+        'NAME': 'monthly_book_db',
+        'USER': 'root',
+        'PASSWORD': 'mb_db_pass@2020',
+        'HOST': 'db',
+        'PORT': 3306,
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
