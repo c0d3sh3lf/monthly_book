@@ -5,7 +5,7 @@ WORKDIR /app
 ADD requirements.txt /app/
 RUN apk update \
     && apk add --virtual build-deps gcc python3-dev musl-dev \
-    && apk add --no-cache mariadb-dev
+    && apk add --no-cache mariadb-dev freetype-dev jpeg-dev zlib-dev libjpeg
 RUN pip install --upgrade pip && pip install -r requirements.txt
 RUN apk del build-deps
 ADD monthly_book/ /app/

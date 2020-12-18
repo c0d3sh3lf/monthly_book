@@ -7,6 +7,10 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
 from base64 import b64decode, b64encode
 from .forms import AddStoreForm, AddProductForm
+import barcode
+from barcode.writer import ImageWriter
+from io import BytesIO
+from django.core.files import File
 
 
 # Error Success function
@@ -194,8 +198,13 @@ def update_product(request, id):
                     product.product_qty = products_form.cleaned_data.get('product_qty')
                 if not product.product_unit == products_form.cleaned_data.get('product_unit'):
                     product.product_unit = products_form.cleaned_data.get('product_unit')
-                if not product.product_code == products_form.cleaned_data.get('product_code'):
+                if not product.product_code == products_form.cleaned_data.get('product_code') or not product.product_barcode:
                     product.product_code = products_form.cleaned_data.get('product_code')
+                    EAN = barcode.get_barcode_class('ean13')
+                    product_barcode = EAN(product.product_code, writer=ImageWriter())
+                    buffer = BytesIO()
+                    product_barcode.write(buffer)
+                    product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
                 if not product.product_rate_per_unit == products_form.cleaned_data.get('product_rate_per_unit'):
                     product.product_rate_per_unit = products_form.cleaned_data.get('product_rate_per_unit')
                 if not product.product_ccy == products_form.cleaned_data.get('product_ccy'):
@@ -216,6 +225,22 @@ def update_product(request, id):
 
 
 @login_required
+def view_product(request, id):
+    if request.user.is_authenticated:
+        try:
+            product = Products.objects.get(id=id)
+            args = {}
+            args["product"] = product
+            (request, args) = view_error_success(request, args)
+            return render(request, "view_product.html", args)
+        except:
+            request.session["error"] = "Unable to find the product"
+            return redirect('mbook:products')
+    else:
+        return redirect('mbook:index')
+
+
+@login_required
 def delete_product(request, id):
     if request.user.is_authenticated:
         try:
@@ -227,8 +252,6 @@ def delete_product(request, id):
             return redirect('mbook:products')
     else:
         return redirect('mbook:index')
-
-
 
 
 # User management views

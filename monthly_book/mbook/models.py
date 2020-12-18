@@ -22,6 +22,8 @@ class Products(models.Model):
     product_rate_per_unit = models.FloatField()
     product_ccy = models.CharField(max_length=3)
     product_is_extra = models.BooleanField(default=False)
+    product_type = models.CharField(max_length=3, null=True)
+    product_barcode = models.ImageField(upload_to="images/", null=True, blank=True)
     date_added = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     
