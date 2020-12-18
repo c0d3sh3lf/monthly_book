@@ -26,7 +26,7 @@ SECRET_KEY = '6uly%jg-171yv=g*8gitoyqry3&*el2bg=@0d64t)#vsip$k+('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
