@@ -4,6 +4,10 @@ from django import forms
 from django.forms import fields, widgets
 from django.forms.models import ModelForm
 from .models import Stores, Products, Transactions
+import barcode
+from barcode.writer import ImageWriter
+from io import BytesIO
+from django.core.files import File
 
 class AddStoreForm(forms.ModelForm):
 
@@ -84,6 +88,17 @@ class AddProductForm(forms.ModelForm):
         'class':'form-control',
     }), label="Product Currency")
 
+    product_type = forms.ChoiceField(choices=[
+        ('GRY','Grocery'),
+        ('CSM', 'Cosmetics'),
+        ('VLF', 'Vegetables / Leaves / Fruits'),
+        ('ESS', 'Essentials'),
+        ('HLD', 'Household'),
+        ('OTH', 'Others')
+    ], required=True, widget=forms.Select(attrs={
+        'class':'form-control',
+    }), label="Product Type")
+
     product_is_extra = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={
         'class':'form-control',
         'value':'Extra Item?'
@@ -91,9 +106,15 @@ class AddProductForm(forms.ModelForm):
 
     class Meta:
         model = Products
-        fields = ('product_name', 'product_desc', 'product_qty', 'product_unit', 'product_code', 'product_rate_per_unit', 'product_ccy', 'product_is_extra')
+        fields = ('product_name', 'product_desc', 'product_qty', 'product_unit', 'product_code', 'product_rate_per_unit', 'product_ccy', 'product_type', 'product_is_extra')
 
     def save(self, commit=True):
+        if self.product_code:
+            EAN = barcode.get_barcode_class('ean13')
+            product_barcode = EAN(self.product_code, writer=ImageWriter())
+            buffer = BytesIO()
+            product_barcode.write(buffer)
+            self.product_barcode.save(f"{self.product_code}.png", File(buffer), save=False)
         product = super(AddProductForm, self).save(commit=False)
         if commit:
             product.save()

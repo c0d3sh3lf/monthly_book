@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Product - {{product.product_name}}
+{% endblock title %}
+
+
+{% block body %}
+    <div class="container-fluid mt-3">
+        <h4 class="display-4">{{product.product_name}}</h4><hr />
+        <div class="container-fluid">
+            <div class="row">
+                <div class = "col-sm-6">
+                    <div class = "card">
+                        <div class = "card-header">Details</div>
+                        <div class = "card-body">
+                            <p class = "card-text">
+                                <table class="table">
+                                    <tbody class="tbody">
+                                        <tr>
+                                            <td align="right"><b>Description:</b></td>
+                                            <td>{{product.product_desc}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Product Quantity</b></td>
+                                            <td>{{ product.product_qty }} 
+                                                {% if product.product_unit == "KGS" %}
+                                                    Kgs
+                                                {% elif product.product_unit == "LTR" %}
+                                                    L
+                                                {% elif product.product_unit == "GMS" %}
+                                                    grams
+                                                {% elif product.product_unit == "MIL" %}
+                                                    ml
+                                                {% elif product.product_unit == "PKT" %}
+                                                    Packets
+                                                {% else %}
+                                                    Pieces
+                                                {% endif %}
+                                                    
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Code / EAN:</b></td>
+                                            <td> {{product.product_code}} </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Rate / Unit:</b></td>
+                                            <td>{{product.product_ccy }} {{ product.product_rate_per_unit }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Product Type:</b></td>
+                                            <td>
+                                                {% if product.product_type == "GRY" %}
+                                                    Grocery
+                                                {% elif product.product_type == "CSM" %}
+                                                    Cosmetics
+                                                {% elif product.product_type == "VLF" %}
+                                                    Vegetables / Leaves / Fruits
+                                                {% elif product.product_type == "ESS" %}
+                                                    Essentials
+                                                {% elif product.product_type == "HLD" %}
+                                                    Household
+                                                {% else %}
+                                                    Others
+                                                {% endif %}    
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Regular List Item:</b></td>
+                                            <td>
+                                                {% if product.product_is_extra %}
+                                                    No
+                                                {% else %}
+                                                    Yes
+                                                {% endif %}   
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                    </tbody>
+                                </table>
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+                    <div class = "col-sm-6">
+                        <div class="div-short">
+                            <div class = "card">
+                                <div class = "card-header">Backend Details</div>
+                                <div class = "card-body">
+                                    <p class = "card-text">
+                                        <table class="table">
+                                            <tbody class="table">
+                                                <tr>
+                                                    <td align="right"><b>Date Added:</b></td>
+                                                    <td>{{product.date_added}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="right"><b>Added By:</b></td>
+                                                    <td>{{product.created_by.last_name}}, {{product.created_by.first_name}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="div-short mt-1">
+                                <div class = "card">
+                                    <div class = "card-header">Product Barcode</div>
+                                    <div class = "card-body">
+                                        <p class = "card-text" align="center">
+                                            <img src="{{ product.product_barcode.url }}"
+                                                alt="{{ product.product_code }}"
+                                                height="150" />
+                                        </p>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="container-fluid pt-5">
+            <a href="{% url 'mbook:products' %}" class="btn btn-primary float-right"><i class="zmdi zmdi-arrow-left"></i> Back</a>
+        </div>
+    </div>
+
+{% endblock body %}

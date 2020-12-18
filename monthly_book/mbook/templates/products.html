@@ -50,7 +50,7 @@
                             <td>{{ product.product_desc }}</td>
                             <td>{{ product.product_code }}</td>
                             <td align="right">
-                                <a href="#" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View"><i class="zmdi zmdi-eye"></i></a>
+                                <a href="{% url 'mbook:view_product' product.id %}" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View"><i class="zmdi zmdi-eye"></i></a>
                                 <a href="{% url 'mbook:update_product' product.id %}" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit"><i class="zmdi zmdi-edit"></i></a>
                                 <a href="{% url 'mbook:delete_product' product.id %}" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove"><i class="zmdi zmdi-delete"></i></a>
                             </td>
