@@ -109,13 +109,13 @@ class AddProductForm(forms.ModelForm):
         fields = ('product_name', 'product_desc', 'product_qty', 'product_unit', 'product_code', 'product_rate_per_unit', 'product_ccy', 'product_type', 'product_is_extra')
 
     def save(self, commit=True):
-        if self.product_code:
+        product = super(AddProductForm, self).save(commit=False)
+        if product.product_code:
             EAN = barcode.get_barcode_class('ean13')
-            product_barcode = EAN(self.product_code, writer=ImageWriter())
+            product_barcode = EAN(product.product_code, writer=ImageWriter())
             buffer = BytesIO()
             product_barcode.write(buffer)
-            self.product_barcode.save(f"{self.product_code}.png", File(buffer), save=False)
-        product = super(AddProductForm, self).save(commit=False)
+            product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
         if commit:
             product.save()
         return product
