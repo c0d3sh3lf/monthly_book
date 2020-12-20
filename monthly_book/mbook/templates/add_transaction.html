@@ -7,7 +7,7 @@
 {% block body %}
     <div class="container mt-3">
         <h2>Add Transaction</h2><hr>
-        <form action="{% url 'mbook:add_txn' %}" method="POST">
+        <form action="{% url 'mbook:add_txn' 'prt' %}" method="POST">
             {% csrf_token %}
             {{ add_txx_pr_form.as_p }}
             <button type="submit" class="btn btn-primary">Add Transaction</button>

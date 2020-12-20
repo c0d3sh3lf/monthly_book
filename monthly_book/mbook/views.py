@@ -42,12 +42,12 @@ def index(request):
         args["products"] = products_count
         transactions_count = Transactions.objects.all().count()
         args["transactions"] = transactions_count
-        total_txns_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year)
+        total_txns_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year).all()
         total_txn_amt = 0.0
         for txn in total_txns_month:
-            total_txns_month += txn.txn_amount
+            total_txn_amt += txn.txn_amount
         args["total_txn_amt"] = total_txn_amt
-        total_extra_txn_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year, product__product_is_extra=True)
+        total_extra_txn_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year, product__product_is_extra=True).all()
         total_extra_amt = 0.0
         for extra_txn in total_extra_txn_month:
             total_extra_amt += extra_txn.txn_amount
@@ -55,6 +55,7 @@ def index(request):
         return render(request, "index.html", args)
     else:
         return render(request, "index.html", {})
+
 
 @login_required
 def list_stores(request):
@@ -285,16 +286,112 @@ def add_txn_pr(request, id):
 
 
 @login_required
-def add_txn(request):
+def add_txn(request, ref):
     if request.user.is_authenticated:
         if request.method == "POST":
-            pass
+            add_txn_pr_form = AddTransactionForm(request.POST)
+            if add_txn_pr_form.is_valid():
+                product = add_txn_pr_form.cleaned_data.get('product')
+                if add_txn_pr_form.cleaned_data.get('txn_product_code') != product.product_code and add_txn_pr_form.cleaned_data.get('txn_product_code') not in ['', '0', '0000000000000']:
+                    product.product_code = add_txn_pr_form.cleaned_data.get('txn_product_code')
+                    EAN = barcode.get_barcode_class('ean13')
+                    product_barcode = EAN(product.product_code, writer=ImageWriter())
+                    buffer = BytesIO()
+                    product_barcode.write(buffer)
+                    product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                    product.save()
+                txn = add_txn_pr_form.save(commit=False)
+                txn.created_by = request.user
+                txn.save()
+                request.session["success"] = "Transaction Added Successfully."
+                if ref == "prt":
+                    return redirect("mbook:products")
+                else:
+                    return redirect("mbook:transactions")
+            else:
+                request.session["error"] = "Unable to add the transaction."
+                if ref == "prt":
+                    return redirect("mbook:products")
+                else:
+                    return redirect("mbook:transactions")
         else:
             request.session["error"] = f"{request.method} not allowed"
             return redirect("mbook:index")
     else:
         return redirect('mbook:index')
 
+
+@login_required
+def update_txn(request, id):
+    if request.user.is_authenticated:
+        transaction = Transactions.objects.get(id=id)
+        if request.method == "GET":
+            args = {}
+            transactions_form = AddTransactionForm(initial={
+                'store':transaction.store,
+                'product':transaction.product,
+                'txn_product_code':transaction.product.product_code,
+                'txn_dop':transaction.txn_dop,
+                'txn_qty':transaction.txn_qty,
+                'txn_unit':transaction.txn_unit,
+                'txn_amount':transaction.txn_amount,
+                'txn_ccy':transaction.txn_ccy
+            })
+            args["transactions_form"] = transactions_form
+            args["id"] = transaction.id
+            (request, args) = view_error_success(request, args)
+            return render(request, "edit_transaction.html", args)
+        elif request.method == "POST":
+            transactions_form = AddTransactionForm(request.POST, instance=transaction)
+            if transactions_form.is_valid():
+                if not transaction.store == transactions_form.cleaned_data.get('store'):
+                    transaction.store = transactions_form.cleaned_data.get('store')
+                if not transaction.product == transactions_form.cleaned_data.get('product'):
+                    transaction.product = transactions_form.cleaned_data.get('product')
+                if not transaction.txn_dop == transactions_form.cleaned_data.get('txn_dop'):
+                    transaction.txn_dop = transactions_form.cleaned_data.get('txn_dop')
+                if not transaction.txn_qty == transactions_form.cleaned_data.get('txn_qty'):
+                    transaction.txn_qty = transactions_form.cleaned_data.get('txn_qty')
+                product = transactions_form.cleaned_data.get('product')
+                if transactions_form.cleaned_data.get('txn_product_code') != product.product_code and transactions_form.cleaned_data.get('txn_product_code') not in ['', '0', '0000000000000']:
+                    product.product_code = transactions_form.cleaned_data.get('txn_product_code')
+                    EAN = barcode.get_barcode_class('ean13')
+                    product_barcode = EAN(product.product_code, writer=ImageWriter())
+                    buffer = BytesIO()
+                    product_barcode.write(buffer)
+                    product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                    product.save()
+                if not transaction.txn_amount == transactions_form.cleaned_data.get('txn_amount'):
+                    transaction.txn_amount = transactions_form.cleaned_data.get('txn_amount')
+                if not transaction.txn_ccy == transactions_form.cleaned_data.get('txn_ccy'):
+                    transaction.txn_ccy = transactions_form.cleaned_data.get('txn_ccy')
+                if not transaction.txn_unit == transactions_form.cleaned_data.get('txn_unit'):
+                    transaction.txn_unit = transactions_form.cleaned_data.get('txn_unit')
+                transaction.save()
+                request.session["success"] = "Transaction saved successfully!"
+                return redirect('mbook:transactions')
+            else:
+                request.session["error"] = transactions_form.errors
+                return redirect('mbook:transactions')
+        else:
+            request.session["error"] = "{} - Method not allowed".format(request.method)
+            return redirect('mbook:index')
+    else:
+        return redirect('mbook:index')
+
+
+@login_required
+def delete_txn(request, id):
+    if request.user.is_authenticated:
+        try:
+            Transactions.objects.filter(id=id).delete()
+            request.session["success"] = "Transaction Deleted Successfully"
+            return redirect('mbook:transactions')
+        except:
+            request.session["error"] = "Unable to delete the product"
+            return redirect('mbook:transactions')
+    else:
+        return redirect('mbook:index')
 
 @login_required
 def list_transactions(request):

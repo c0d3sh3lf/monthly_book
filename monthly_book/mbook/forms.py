@@ -132,13 +132,13 @@ class AddProductForm(forms.ModelForm):
 
 class AddTransactionForm(forms.ModelForm):
 
-    store = forms.ModelChoiceField(queryset=Stores.objects.all(), widget=forms.Select(attrs={
+    store = forms.ModelChoiceField(queryset=Stores.objects.all().order_by("store_name"), widget=forms.Select(attrs={
         'class':'form-control'
     }), label="Store")
 
-    product = forms.ModelChoiceField(queryset=Products.objects.all(), widget=forms.Select(attrs={
+    product = forms.ModelChoiceField(queryset=Products.objects.all().order_by("product_name"), widget=forms.Select(attrs={
         'class':'form-control'
-    }), label="Store")
+    }), label="Product")
 
     txn_product_code = forms.CharField(max_length="13", required=False, widget=forms.NumberInput(attrs={
         'class': 'form-control',
@@ -184,3 +184,9 @@ class AddTransactionForm(forms.ModelForm):
     class Meta:
         model = Transactions
         fields = ('store', 'product', 'txn_product_code', 'txn_dop', 'txn_qty', 'txn_unit', 'txn_amount', 'txn_ccy')
+
+    def save(self, commit=True):
+        txn = super(AddTransactionForm, self).save(commit=False)
+        if commit:
+            txn.save()
+        return txn

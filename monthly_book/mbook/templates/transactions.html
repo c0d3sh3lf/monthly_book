@@ -45,7 +45,7 @@
             role="dialog" aria-labelledby="AddTransactionModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="form">
                 <div class="modal-content">
-                    <form action="{% url 'mbook:add_txn' %}" method="POST">
+                    <form action="{% url 'mbook:add_txn' 'txn' %}" method="POST">
                         <div class="modal-header">
                             <h5 class = "modal-title" id = "AddTransactionModalLabel">Add Transaction</h5>
                             <button type = "button" class = "close" data-dismiss = "modal" aria-label = "Close">
@@ -87,8 +87,8 @@
                             <td>{{ txn.txn_ccy }} {{ txn.txn_amount }}</td>
                             <td align="right">
                                 <a href="#" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View Transaction Details"><i class="zmdi zmdi-eye"></i></a>
-                                <a href="#" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit Transaction Details"><i class="zmdi zmdi-edit"></i></a>
-                                <a href="#" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove Transaction"><i class="zmdi zmdi-delete"></i></a>
+                                <a href="{% url 'mbook:update_txn' txn.id %}" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit Transaction Details"><i class="zmdi zmdi-edit"></i></a>
+                                <a href="{% url 'mbook:delete_txn' txn.id %}" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove Transaction"><i class="zmdi zmdi-delete"></i></a>
                             </td>
                         </tr>
                     {% endfor %}

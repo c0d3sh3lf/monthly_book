@@ -11,7 +11,7 @@ class Stores(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
 
     def __str__(self):
-        return self.store_name
+        return f"{self.store_name}"
 
 class Products(models.Model):
     product_name = models.TextField()
@@ -28,7 +28,7 @@ class Products(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     
     def __str__(self):
-        return "{} - {}".format(self.product_name, self.product_code)
+        return f"{self.product_name} ({self.product_code})"
 
 class Transactions(models.Model):
     txn_timestamp = models.DateTimeField(default=timezone.now)
