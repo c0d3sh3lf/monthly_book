@@ -1,14 +1,18 @@
 {% extends 'base.html'%} 
-{% block title %} Products {% endblock title %} 
+{% block title %} Transactions {% endblock title %} 
 
 {% block scripts %}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css" integrity="sha256-b88RdwbRJEzRx95nCuuva+hO5ExvXXnpX+78h8DjyOE=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js" integrity="sha256-/7FLTdzP6CfC1VBAj/rsp3Rinuuu9leMRGd354hvk0k=" crossorigin="anonymous"></script>
+
     <script>
         $(document).ready(function(){  
             $('#searchInput').keyup(function(){  
                 search_table($(this).val());  
             });  
             function search_table(value){  
-                $('#productTable tbody tr').each(function(){  
+                $('#transactionTable tbody tr').each(function(){  
                     var found = 'false';  
                     $(this).each(function(){  
                         if($(this).text().toLowerCase().indexOf(value.toLowerCase()) >= 0)  
@@ -31,26 +35,26 @@
 {% endblock scripts %}
 {% block body %}
     <div class="container mt-4">
-        <h2>Products</h2>
+        <h2>Transactions</h2>
         <hr/>
-        <input type="text" placeholder="Search Product Name / EAN Code" max-length="256" class="form-control mb-2" id="searchInput" />
-        <button type="button" class="btn btn-dark float-right mb-1 mt-1" data-toggle="modal" data-target="#AddProductModal">
-            <i class="zmdi zmdi-plus-square"></i> Add Product
+        <input type="text" placeholder="Search Transaction Date / Product / Store" max-length="256" class="form-control mb-2" id="searchInput" />
+        <button type="button" class="btn btn-dark float-right mb-1 mt-1" data-toggle="modal" data-target="#AddTransactionModal">
+            <i class="zmdi zmdi-plus-square"></i> Add Transaction
         </button>
-        <div class="modal fade" id="AddProductModal" tabindex="-1"
-            role="dialog" aria-labelledby="AddProductModalLabel" aria-hidden="true">
+        <div class="modal fade" id="AddTransactionModal" tabindex="-1"
+            role="dialog" aria-labelledby="AddTransactionModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="form">
                 <div class="modal-content">
-                    <form action="{% url 'mbook:add_product' %}" method="POST">
+                    <form action="{% url 'mbook:add_txn' %}" method="POST">
                         <div class="modal-header">
-                            <h5 class = "modal-title" id = "AddProductModalLabel">Add Product</h5>
+                            <h5 class = "modal-title" id = "AddTransactionModalLabel">Add Transaction</h5>
                             <button type = "button" class = "close" data-dismiss = "modal" aria-label = "Close">
                                 <span aria-hidden = "true">×</span>
                             </button>
                         </div>
                         <div class="modal-body">
                                 {% csrf_token %}
-                                {{ products_form.as_p }}
+                                {{ add_txn_form.as_p }}
                         </div>
                         <div class="modal-footer">
                             <button type = "button" class = "btn btn-danger" data-dismiss = "modal">Close</button>
@@ -60,36 +64,37 @@
                 </div>
             </div>
         </div>
-        <table class="table table-striped" id="productTable">
+        <table class="table table-striped" id="transactionTable">
             <thead class="thead-dark">
                 <tr>
                     <th>Sr. No.</th>
+                    <th>Date of Purchase</th>
                     <th>Product Name</th>
-                    <th>Description</th>
-                    <th>Code</th>
+                    <th>Store</th>
+                    <th>Amount</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 
-                {% if products %}
-                    {% for product in products  %}
+                {% if transactions %}
+                    {% for txn in transactions  %}
                         <tr>
                             <td align="right">{{ forloop.counter }}.</td>
-                            <td>{{ product.product_name }}</td>
-                            <td>{{ product.product_desc }}</td>
-                            <td>{{ product.product_code }}</td>
+                            <td>{{ txn.txn_dop }}</td>
+                            <td>{{ txn.product }}</td>
+                            <td>{{ txn.store }}</td>
+                            <td>{{ txn.txn_ccy }} {{ txn.txn_amount }}</td>
                             <td align="right">
-                                <a href="{% url 'mbook:add_txn_pr' product.id %}" class="btn btn-info" data-toggle="tooltip" data-placement="top" title="Add Transaction"><i class="zmdi zmdi-shopping-cart-plus"></i></a>
-                                <a href="{% url 'mbook:view_product' product.id %}" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View"><i class="zmdi zmdi-eye"></i></a>
-                                <a href="{% url 'mbook:update_product' product.id %}" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit"><i class="zmdi zmdi-edit"></i></a>
-                                <a href="{% url 'mbook:delete_product' product.id %}" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove"><i class="zmdi zmdi-delete"></i></a>
+                                <a href="#" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View Transaction Details"><i class="zmdi zmdi-eye"></i></a>
+                                <a href="#" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit Transaction Details"><i class="zmdi zmdi-edit"></i></a>
+                                <a href="#" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove Transaction"><i class="zmdi zmdi-delete"></i></a>
                             </td>
                         </tr>
                     {% endfor %}
                 {% else %}
                         <tr>
-                            <td colspan="5">No Products found.</td>
+                            <td colspan="6">No Transactions found.</td>
                         </tr>
                 {% endif %}
             </tbody>

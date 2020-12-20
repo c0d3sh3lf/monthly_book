@@ -8,6 +8,8 @@ import barcode
 from barcode.writer import ImageWriter
 from io import BytesIO
 from django.core.files import File
+from .widgets import DatePickerInput
+from datetime import date
 
 class AddStoreForm(forms.ModelForm):
 
@@ -68,7 +70,7 @@ class AddProductForm(forms.ModelForm):
         'class':'form-control',
     }), label="Product Unit")
 
-    product_code = forms.CharField(max_length="191", required=True, widget=forms.NumberInput(attrs={
+    product_code = forms.CharField(max_length="13", required=False, widget=forms.NumberInput(attrs={
         'class': 'form-control',
         'placeholder': 'Product Barcode'
     }), label="Product Code")
@@ -110,7 +112,14 @@ class AddProductForm(forms.ModelForm):
 
     def save(self, commit=True):
         product = super(AddProductForm, self).save(commit=False)
-        if product.product_code:
+        if product.product_code and (product.product_code != "0" or product.product_code != '' or product.product_code != '0000000000000'):
+            EAN = barcode.get_barcode_class('ean13')
+            product_barcode = EAN(product.product_code, writer=ImageWriter())
+            buffer = BytesIO()
+            product_barcode.write(buffer)
+            product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+        else:
+            product.product_code = "0000000000000"
             EAN = barcode.get_barcode_class('ean13')
             product_barcode = EAN(product.product_code, writer=ImageWriter())
             buffer = BytesIO()
@@ -119,3 +128,59 @@ class AddProductForm(forms.ModelForm):
         if commit:
             product.save()
         return product
+
+
+class AddTransactionForm(forms.ModelForm):
+
+    store = forms.ModelChoiceField(queryset=Stores.objects.all(), widget=forms.Select(attrs={
+        'class':'form-control'
+    }), label="Store")
+
+    product = forms.ModelChoiceField(queryset=Products.objects.all(), widget=forms.Select(attrs={
+        'class':'form-control'
+    }), label="Store")
+
+    txn_product_code = forms.CharField(max_length="13", required=False, widget=forms.NumberInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Product Barcode'
+    }), label="Product Code")
+
+    txn_dop = forms.DateField(required=True, input_formats=['%Y-%m-%d'], widget=DatePickerInput(attrs={
+        'class':'form-control',
+        'max-date': date.today()
+    }), label="Date of Purchase")
+
+    txn_qty = forms.FloatField(required=True, widget=forms.NumberInput(attrs={
+        'class':'form-control',
+        'placeholder':'Quantity'
+    }), label="Transaction Quantity")
+
+    txn_unit = forms.ChoiceField(choices=[
+        ('KGS','Kilogram'),
+        ('LTR', 'Litres'),
+        ('GMS', 'Grams'),
+        ('MIL', 'Millilitres'),
+        ('PKT', 'Packet'),
+        ('PCS', 'Pieces')
+    ], required=True, widget=forms.Select(attrs={
+        'class':'form-control',
+    }), label="Product Unit")
+
+    txn_amount = forms.FloatField(required=True, widget=forms.NumberInput(attrs={
+        'class':'form-control',
+        'placeholder':'Rate per Unit'
+    }), label="Transaction Amount")
+
+    txn_ccy = forms.ChoiceField(choices=[
+        ('AED','United Arab Dirhams'),
+        ('USD', 'United State Dollars'),
+        ('INR', 'Indian Rupees'),
+        ('GBP', 'Great Britain Pounds'),
+        ('EUR', 'Euros')
+    ], required=True, widget=forms.Select(attrs={
+        'class':'form-control',
+    }), label="Product Currency")
+
+    class Meta:
+        model = Transactions
+        fields = ('store', 'product', 'txn_product_code', 'txn_dop', 'txn_qty', 'txn_unit', 'txn_amount', 'txn_ccy')

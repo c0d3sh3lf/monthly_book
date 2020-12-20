@@ -18,7 +18,7 @@ class Products(models.Model):
     product_desc = models.TextField()
     product_qty = models.FloatField()
     product_unit = models.CharField(max_length=16)
-    product_code = models.CharField(max_length=191, unique=True)
+    product_code = models.CharField(max_length=191, null=True, default="0000000000000")
     product_rate_per_unit = models.FloatField()
     product_ccy = models.CharField(max_length=3)
     product_is_extra = models.BooleanField(default=False)

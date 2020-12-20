@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
 from base64 import b64decode, b64encode
-from .forms import AddStoreForm, AddProductForm
+from .forms import AddStoreForm, AddProductForm, AddTransactionForm
 import barcode
 from barcode.writer import ImageWriter
 from io import BytesIO
@@ -199,12 +199,20 @@ def update_product(request, id):
                 if not product.product_unit == products_form.cleaned_data.get('product_unit'):
                     product.product_unit = products_form.cleaned_data.get('product_unit')
                 if not product.product_code == products_form.cleaned_data.get('product_code') or not product.product_barcode:
-                    product.product_code = products_form.cleaned_data.get('product_code')
-                    EAN = barcode.get_barcode_class('ean13')
-                    product_barcode = EAN(product.product_code, writer=ImageWriter())
-                    buffer = BytesIO()
-                    product_barcode.write(buffer)
-                    product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                    if not(product.product_code != "" or product.product_code != "0000000000000" or product.product_code != "0"):
+                        product.product_code = products_form.cleaned_data.get('product_code')
+                        EAN = barcode.get_barcode_class('ean13')
+                        product_barcode = EAN(product.product_code, writer=ImageWriter())
+                        buffer = BytesIO()
+                        product_barcode.write(buffer)
+                        product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                    else:
+                        product.product_code = "0000000000000"
+                        EAN = barcode.get_barcode_class('ean13')
+                        product_barcode = EAN(product.product_code, writer=ImageWriter())
+                        buffer = BytesIO()
+                        product_barcode.write(buffer)
+                        product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
                 if not product.product_rate_per_unit == products_form.cleaned_data.get('product_rate_per_unit'):
                     product.product_rate_per_unit = products_form.cleaned_data.get('product_rate_per_unit')
                 if not product.product_ccy == products_form.cleaned_data.get('product_ccy'):
@@ -227,15 +235,15 @@ def update_product(request, id):
 @login_required
 def view_product(request, id):
     if request.user.is_authenticated:
-        try:
-            product = Products.objects.get(id=id)
-            args = {}
-            args["product"] = product
-            (request, args) = view_error_success(request, args)
-            return render(request, "view_product.html", args)
-        except:
-            request.session["error"] = "Unable to find the product"
-            return redirect('mbook:products')
+        # try:
+        product = Products.objects.get(id=id)
+        args = {}
+        args["product"] = product
+        (request, args) = view_error_success(request, args)
+        return render(request, "view_product.html", args)
+        # except:
+        #     request.session["error"] = "Unable to find the product"
+        #     return redirect('mbook:products')
     else:
         return redirect('mbook:index')
 
@@ -250,6 +258,54 @@ def delete_product(request, id):
         except:
             request.session["error"] = "Unable to delete the product"
             return redirect('mbook:products')
+    else:
+        return redirect('mbook:index')
+
+
+@login_required
+def add_txn_pr(request, id):
+    if request.user.is_authenticated:
+        product = Products.objects.get(id=id)
+        add_txn_pr_form = AddTransactionForm(initial={'product':product,
+            'txn_product_code':product.product_code, 
+            'txn_dop':date.today(),
+            'txn_qty':product.product_qty,
+            'txn_unit':product.product_unit,
+            'txn_amount':product.product_rate_per_unit,
+            'txn_ccy':product.product_ccy
+            })
+        args = {}
+        args["add_txx_pr_form"] = add_txn_pr_form
+        (request, args) = view_error_success(request, args)
+        return render(request, "add_transaction.html", args)
+    else:
+        return redirect("mbook:index")
+
+
+@login_required
+def add_txn(request):
+    if request.user.is_authenticated:
+        if request.method == "POST":
+            pass
+        else:
+            request.session["error"] = f"{request.method} not allowed"
+            return redirect("mbook:index")
+    else:
+        return redirect('mbook:index')
+
+
+@login_required
+def list_transactions(request):
+    if request.user.is_authenticated:
+        transactions = Transactions.objects.all().order_by('-txn_dop')
+        args = {}
+        args["transactions"] = transactions
+        add_txn_form = AddTransactionForm(initial={
+            'txn_dop':date.today()
+        })
+        args["add_txn_form"] = add_txn_form
+        (request, args) = view_error_success(request, args)
+        return render(request, "transactions.html", args)
     else:
         return redirect('mbook:index')
 
