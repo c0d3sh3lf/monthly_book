@@ -381,6 +381,18 @@ def update_txn(request, id):
 
 
 @login_required
+def view_txn(request, id):
+    if request.user.is_authenticated:
+        transaction = Transactions.objects.get(id=id)
+        args = {}
+        args["transaction"] = transaction
+        (request, args) = view_error_success(request, args)
+        return render(request, "view_transaction.html", args)
+    else:
+        return redirect('mbook:index')
+
+
+@login_required
 def delete_txn(request, id):
     if request.user.is_authenticated:
         try:
