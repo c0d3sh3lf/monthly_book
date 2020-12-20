@@ -11,6 +11,8 @@ import barcode
 from barcode.writer import ImageWriter
 from io import BytesIO
 from django.core.files import File
+from django.conf import settings
+import os
 
 
 # Error Success function
@@ -198,7 +200,7 @@ def update_product(request, id):
                     product.product_qty = products_form.cleaned_data.get('product_qty')
                 if not product.product_unit == products_form.cleaned_data.get('product_unit'):
                     product.product_unit = products_form.cleaned_data.get('product_unit')
-                if not product.product_code == products_form.cleaned_data.get('product_code') or not product.product_barcode:
+                if not product.product_code == products_form.cleaned_data.get('product_code') or not product.product_barcode or not os.path.isfile(os.path.join(settings.MEDIA_ROOT, str(product.product_barcode))):
                     if not(product.product_code != "" or product.product_code != "0000000000000" or product.product_code != "0"):
                         product.product_code = products_form.cleaned_data.get('product_code')
                         EAN = barcode.get_barcode_class('ean13')
