@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Product - {{product.product_name}}
+{% endblock title %}
+
+
+{% block body %}
+    <div class="container-fluid mt-3">
+        <div class="container-fluid">
+            <div class="row">
+                <div class = "col-sm-6">
+                    <div class = "card">
+                        <div class = "card-header">Transaction Details</div>
+                        <div class = "card-body">
+                            <p class = "card-text">
+                                <table class="table">
+                                    <tbody class="table">
+                                        <tr>
+                                            <td align="right"><b>Created On:</b></td>
+                                            <td>{{transaction.txn_timestamp}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Purchase Date:</b></td>
+                                            <td class="text-success"><strong>{{transaction.txn_dop}}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Quantity:</b></td>
+                                            <td class="text-success"><strong>{{ transaction.txn_qty }} 
+                                                {% if transaction.txn_unit == "KGS" %}
+                                                    Kgs
+                                                {% elif transaction.txn_unit == "LTR" %}
+                                                    L
+                                                {% elif transaction.txn_unit == "GMS" %}
+                                                    grams
+                                                {% elif transaction.txn_unit == "MIL" %}
+                                                    ml
+                                                {% elif transaction.txn_unit == "PKT" %}
+                                                    Packets
+                                                {% else %}
+                                                    Pieces
+                                                {% endif %}
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Amount:</b></td>
+                                            <td class="text-success"><strong>{{transaction.txn_ccy }} {{ transaction.txn_amount }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Bought From:</b></td>
+                                            <td class="text-success"><strong>{{transaction.store.store_name}}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Location:</b></td>
+                                            <td>
+                                                {% if transaction.store.store_type == "ONL" %}
+                                                    <a href="{{ transaction.store.store_address }}" target="blank">{{ transaction.store.store_address }}</a>
+                                                {% else %}
+                                                    {{ transaction.store.store_address }}
+                                                {% endif %}    
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Store Type:</b></td>
+                                            <td>
+                                                {% if transaction.store.store_type == "ONL" %}
+                                                    Online
+                                                {% else %}
+                                                    Local
+                                                {% endif %}    
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Added By:</b></td>
+                                            <td>{{transaction.created_by.last_name}}, {{transaction.created_by.first_name}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    </div>
+                    <div class = "col-sm-6">
+                        <div class="div-short">
+                            <div class = "card">
+                                <div class = "card-header">Product Details</div>
+                                <div class = "card-body">
+                                    <p class = "card-text">
+                                        <table class="table">
+                                            <tbody class="tbody">
+                                                <tr>
+                                                    <td align="right"><b>Product Name:</b></td>
+                                                    <td class="text-success"><strong>{{transaction.product.product_name}}</strong></td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="right"><b>Code / EAN:</b></td>
+                                                    <td class="text-success"> <strong>{{transaction.product.product_code}}</strong> </td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="right"><b>Description:</b></td>
+                                                    <td>{{transaction.product.product_desc}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="right"><b>Product Type:</b></td>
+                                                    <td>
+                                                        {% if transaction.product.product_type == "GRY" %}
+                                                            Grocery
+                                                        {% elif transaction.product.product_type == "CSM" %}
+                                                            Cosmetics
+                                                        {% elif transaction.product.product_type == "VLF" %}
+                                                            Vegetables / Leaves / Fruits
+                                                        {% elif transaction.product.product_type == "ESS" %}
+                                                            Essentials
+                                                        {% elif transaction.product.product_type == "HLD" %}
+                                                            Household
+                                                        {% else %}
+                                                            Others
+                                                        {% endif %}    
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="right"><b>Regular List Item:</b></td>
+                                                    <td>
+                                                        {% if transaction.product.product_is_extra %}
+                                                            No
+                                                        {% else %}
+                                                            Yes
+                                                        {% endif %}   
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                            </tbody>
+                                        </table>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="div-short mt-1">
+                                <div class = "card">
+                                    <div class = "card-header">Product Barcode</div>
+                                    <div class = "card-body">
+                                        <p class = "card-text" align="center">
+                                            <img src="{{ transaction.product.product_barcode.url }}"
+                                                alt="{{ transaction.product.product_code }}"
+                                                height="150" />
+                                        </p>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="container-fluid pt-5">
+            <a href="{% url 'mbook:transactions' %}" class="btn btn-primary float-right"><i class="zmdi zmdi-arrow-left"></i> Back</a>
+        </div>
+    </div>
+
+{% endblock body %}
