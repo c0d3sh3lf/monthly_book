@@ -11,14 +11,14 @@ class Stores(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
 
     def __str__(self):
-        return self.store_name
+        return f"{self.store_name}"
 
 class Products(models.Model):
     product_name = models.TextField()
     product_desc = models.TextField()
     product_qty = models.FloatField()
     product_unit = models.CharField(max_length=16)
-    product_code = models.CharField(max_length=191, unique=True)
+    product_code = models.CharField(max_length=191, null=True, default="0000000000000")
     product_rate_per_unit = models.FloatField()
     product_ccy = models.CharField(max_length=3)
     product_is_extra = models.BooleanField(default=False)
@@ -28,7 +28,7 @@ class Products(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     
     def __str__(self):
-        return "{} - {}".format(self.product_name, self.product_code)
+        return f"{self.product_name} ({self.product_code})"
 
 class Transactions(models.Model):
     txn_timestamp = models.DateTimeField(default=timezone.now)

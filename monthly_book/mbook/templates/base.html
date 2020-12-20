@@ -6,6 +6,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+        <!-- Favicon -->
+        <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+
         <!-- Compiled and Minified Bootstrap CSS -->
         <link rel = "stylesheet" 
         href = "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
@@ -136,13 +139,13 @@
                 <div class = "collapse navbar-collapse" id = "navbarSupportedContent">
                 <ul class = "navbar-nav mr-auto">
                   <li class="nav-item">
-                    <a class="nav-link" href="#">Transactions</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="{% url 'mbook:stores' %}">Stores</a>
+                    <a class="nav-link" href="{% url 'mbook:transactions' %}">Transactions</a>
                   </li>
                   <li class="nav-item">
                     <a class="nav-link" href="{% url 'mbook:products' %}">Products</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'mbook:stores' %}">Stores</a>
                   </li>
                   <li class="nav-item">
                     <a class="nav-link" href="#">Reports</a>

@@ -2,7 +2,7 @@
 {% block title %} Edit Products {% endblock title %} 
 {% block body %}
     <div class="container mt-3">
-        <h2>Edit Products</h2><hr>
+        <h2>Edit Product</h2><hr>
         <form action="{% url 'mbook:update_product' id %}" method="POST">
             {% csrf_token %}
             {{ products_form.as_p }}

@@ -1,0 +1,16 @@
+{% extends 'base.html'%} 
+{% block title %} Add Transaction {% endblock title %} 
+{% block scripts %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css" integrity="sha256-b88RdwbRJEzRx95nCuuva+hO5ExvXXnpX+78h8DjyOE=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js" integrity="sha256-/7FLTdzP6CfC1VBAj/rsp3Rinuuu9leMRGd354hvk0k=" crossorigin="anonymous"></script>
+{% endblock scripts %}
+{% block body %}
+    <div class="container mt-3">
+        <h2>Add Transaction</h2><hr>
+        <form action="{% url 'mbook:add_txn' 'prt' %}" method="POST">
+            {% csrf_token %}
+            {{ add_txx_pr_form.as_p }}
+            <button type="submit" class="btn btn-primary">Add Transaction</button>
+        </form>
+    </div>
+{% endblock body %}
