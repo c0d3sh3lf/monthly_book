@@ -21,4 +21,6 @@ urlpatterns = [
     path('view_txn/<int:id>/', views.view_txn, name="view_txn"),
     path('update_txn/<int:id>/', views.update_txn, name="update_txn"),
     path('delete_txn/<int:id>/', views.delete_txn, name="delete_txn"),
+    path('reports/', views.reports, name="reports"),
+    path('generate_list_pdf/', views.generate_list_pdf, name="generate_list_pdf")
 ]

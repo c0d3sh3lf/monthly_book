@@ -1,18 +1,26 @@
-from django.shortcuts import render, redirect, get_object_or_404
+# Django Imports
+from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.decorators import login_required
-from .models import Stores, Products, Transactions
-from datetime import date, datetime, timedelta
-from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
-from base64 import b64decode, b64encode
-from .forms import AddStoreForm, AddProductForm, AddTransactionForm
-import barcode
-from barcode.writer import ImageWriter
-from io import BytesIO
 from django.core.files import File
 from django.conf import settings
-import os
+from django.http import FileResponse
+
+# Core and 3rd Party Imports
+from datetime import date, datetime
+from base64 import b64decode, b64encode
+import barcode, os
+from barcode.writer import ImageWriter
+from io import BytesIO
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageBreak
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.units import inch
+
+# Application Imports
+from .models import Stores, Products, Transactions
+from .forms import AddStoreForm, AddProductForm, AddTransactionForm
 
 
 # Error Success function
@@ -30,10 +38,21 @@ def view_error_success(request, args):
     return (request, args)
 
 
+# Login Required Decorator
+def login_required(function):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            request.session["error"] = "You are not authenticated. Please authenticate yourself here."
+            return redirect("mbook:index")
+        else:
+            return function(request, *args, **kwargs)
+    return wrapper
+
+
 # Create your views here.
 def index(request):
+    args = {}
     if request.user.is_authenticated:
-        args = {}
         current_month = datetime.now().month
         current_year = datetime.now().year
         stores_count = Stores.objects.all().count()
@@ -54,6 +73,7 @@ def index(request):
         args["total_extra_amt"] = total_extra_amt
         return render(request, "index.html", args)
     else:
+        (request, args) = view_error_success(request, args)
         return render(request, "index.html", {})
 
 
@@ -405,6 +425,7 @@ def delete_txn(request, id):
     else:
         return redirect('mbook:index')
 
+
 @login_required
 def list_transactions(request):
     if request.user.is_authenticated:
@@ -419,6 +440,78 @@ def list_transactions(request):
         return render(request, "transactions.html", args)
     else:
         return redirect('mbook:index')
+
+
+@login_required
+def reports(request):
+    if request.user.is_authenticated:
+        args = {}
+        (request, args) = view_error_success(request, args)
+        return render(request, "reports.html", args)
+    else:
+        return redirect("mbook:index")
+
+
+@login_required
+def generate_list_pdf(request):
+    if request.user.is_authenticated:
+        buffer = BytesIO()
+        elements = []
+        p = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
+        tStyle = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('BACKGROUND', (0, 30), (-1, 30), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('TEXTCOLOR', (0, 30), (-1, 30), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('GRID',(0,1),(-1,-1),1,colors.black),
+        ]) 
+
+        # Creating grocery table
+        g_data = []
+        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type="GRY")
+        grocery_item_count = len(grocery_regular_items)
+        counter = 1
+        if grocery_item_count > 0:
+            for grocery_counter in range(0, grocery_item_count, 2):
+                if (counter-1) % 29 == 0:
+                    g_data.append(['Sr. No.', 'R', 'P', 'Grocery Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Grocery Item', 'Item Qty.'])
+                try:
+                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {grocery_regular_items[grocery_counter].product_unit}", "", f"{counter + int(grocery_item_count/2) + (grocery_item_count % 2 > 0)}", "", "", f"{grocery_regular_items[grocery_counter + 1].product_name}", f"{grocery_regular_items[grocery_counter + 1].product_qty} {grocery_regular_items[grocery_counter + 1].product_unit}"])
+                except IndexError:
+                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {grocery_regular_items[grocery_counter].product_unit}", "", "", "", "", "", ""])
+                counter += 1
+            g_table = Table(g_data)
+            g_table.setStyle(tStyle)
+            elements.append(g_table)
+            elements.append(PageBreak())
+
+        # Creating Cosmetics / HouseHold Table
+        c_data = []
+        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"])
+        cosmetic_item_count = len(cosmetic_regular_items)
+        counter = 1
+        if cosmetic_item_count > 0:
+            for cosmetic_counter in range(0, cosmetic_item_count, 2):
+                if (counter-1) % 29 == 0:
+                    c_data.append(['Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.'])
+                try:
+                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {cosmetic_regular_items[cosmetic_counter].product_unit}", "", f"{counter + int(cosmetic_item_count/2) + (cosmetic_item_count % 2 > 0)}", "", "", f"{cosmetic_regular_items[cosmetic_counter + 1].product_name}", f"{cosmetic_regular_items[cosmetic_counter + 1].product_qty} {cosmetic_regular_items[cosmetic_counter + 1].product_unit}"])
+                except IndexError:
+                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {cosmetic_regular_items[cosmetic_counter].product_unit}", "", "", "", "", "", ""])
+                counter += 1
+            c_table = Table(c_data)
+            c_table.setStyle(tStyle)
+            elements.append(c_table)
+            elements.append(PageBreak())
+
+        p.build(elements)
+        buffer.seek(0)
+        gen_datetime = datetime.now()
+        filename = f"list_{gen_datetime.year}{gen_datetime.month}{gen_datetime.day}{gen_datetime.hour}{gen_datetime.minute}{gen_datetime.second}"
+        return FileResponse(buffer, as_attachment=True, filename=filename)
+    else:
+        return redirect("mbook:index")
 
 
 # User management views
