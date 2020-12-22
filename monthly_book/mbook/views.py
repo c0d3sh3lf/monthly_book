@@ -534,8 +534,11 @@ def gen_month_txn(request):
     elements = []    
 
     tStyle = TableStyle([
-        ('ALIGN', (5, 0), (5, -1), 'RIGHT'),
+        ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
         ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+        ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black)
     ])
 
@@ -559,7 +562,7 @@ def gen_month_txn(request):
     ccy = ""
     if txn_count > 0:
         for transaction in transactions:
-            if (counter - 1) % 40 == 0:
+            if (counter - 1) == 0:
                 txn_data.append([
                     "Sr. No.",
                     "Purchase Date",
@@ -569,12 +572,12 @@ def gen_month_txn(request):
                     "Amount.",
                 ])
             txn_data.append([
-                f"{counter}",
-                f"{transaction.txn_dop}",
+                f"{counter}.",
+                f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
                 f"{transaction.store.store_name}",
-                f"{transaction.product.product_name} - {transaction.product.product_code}",
+                f"{transaction.product.product_code} - {transaction.product.product_name}",
                 f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
-                f"{transaction.txn_ccy} {round(transaction.txn_amount, 2)}",
+                "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
             ])
 
             total_amount += transaction.txn_amount
@@ -588,7 +591,7 @@ def gen_month_txn(request):
             "",
             "",
             "Grand Total:",
-            f"{ccy} {total_amount}"
+            "{} {:.2f}".format(ccy, total_amount)
         ])
         txns = Table(txn_data)
         txns.setStyle(tStyle)
@@ -615,7 +618,6 @@ def gen_month_txn(request):
     filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
     return FileResponse(buffer, as_attachment=True, filename=filename)
         
-
 
 # User management views
 def user_login(request):
