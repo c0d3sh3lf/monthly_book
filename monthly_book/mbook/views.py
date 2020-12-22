@@ -221,27 +221,23 @@ def update_product(request, id):
                     product.product_qty = products_form.cleaned_data.get('product_qty')
                 if not product.product_unit == products_form.cleaned_data.get('product_unit'):
                     product.product_unit = products_form.cleaned_data.get('product_unit')
-                if not product.product_code == products_form.cleaned_data.get('product_code') or not product.product_barcode or not os.path.isfile(os.path.join(settings.MEDIA_ROOT, str(product.product_barcode))):
-                    if not(product.product_code != "" or product.product_code != "0000000000000" or product.product_code != "0"):
-                        product.product_code = products_form.cleaned_data.get('product_code')
-                        EAN = barcode.get_barcode_class('ean13')
-                        product_barcode = EAN(product.product_code, writer=ImageWriter())
-                        buffer = BytesIO()
-                        product_barcode.write(buffer)
-                        product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
-                    else:
-                        product.product_code = "0000000000000"
-                        EAN = barcode.get_barcode_class('ean13')
-                        product_barcode = EAN(product.product_code, writer=ImageWriter())
-                        buffer = BytesIO()
-                        product_barcode.write(buffer)
-                        product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                if not product.product_code == products_form.cleaned_data.get('product_code'):
+                    product.product_code = products_form.cleaned_data.get('product_code')
                 if not product.product_rate_per_unit == products_form.cleaned_data.get('product_rate_per_unit'):
                     product.product_rate_per_unit = products_form.cleaned_data.get('product_rate_per_unit')
                 if not product.product_ccy == products_form.cleaned_data.get('product_ccy'):
                     product.product_ccy = products_form.cleaned_data.get('product_ccy')
                 if not product.product_is_extra == products_form.cleaned_data.get('product_is_extra'):
                     product.product_is_extra = products_form.cleaned_data.get('product_is_extra')
+                # Refreshing Barcode Image
+                if product.product_barcode or os.path.isfile(os.path.join(settings.MEDIA_ROOT, str(product.product_barcode))):
+                    product.product_barcode.delete(save=False)
+                product.product_code = products_form.cleaned_data.get('product_code')
+                EAN = barcode.get_barcode_class('ean13')
+                product_barcode = EAN(product.product_code, writer=ImageWriter())
+                buffer = BytesIO()
+                product_barcode.write(buffer)
+                product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
                 product.save()
                 request.session["success"] = "{} - product saved successfully!".format(product.product_name)
                 return redirect('mbook:products')
