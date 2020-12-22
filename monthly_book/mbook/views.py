@@ -65,12 +65,12 @@ def index(request):
         total_txn_amt = 0.0
         for txn in total_txns_month:
             total_txn_amt += txn.txn_amount
-        args["total_txn_amt"] = total_txn_amt
+        args["total_txn_amt"] = round(total_txn_amt, 2)
         total_extra_txn_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year, product__product_is_extra=True).all()
         total_extra_amt = 0.0
         for extra_txn in total_extra_txn_month:
             total_extra_amt += extra_txn.txn_amount
-        args["total_extra_amt"] = total_extra_amt
+        args["total_extra_amt"] = round(total_extra_amt, 2)
         return render(request, "index.html", args)
     else:
         (request, args) = view_error_success(request, args)
@@ -467,6 +467,16 @@ def generate_list_pdf(request):
             ('GRID',(0,1),(-1,-1),1,colors.black),
         ]) 
 
+        unit_dict = {
+            'KGS': 'KG',
+            'LTR': 'L',
+            'GMS': 'gms',
+            'MIL': 'ml',
+            'PKT': 'P',
+            'PCS': 'Pcs.'
+        }
+
+
         # Creating grocery table
         g_data = []
         grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type="GRY")
@@ -477,9 +487,9 @@ def generate_list_pdf(request):
                 if (counter-1) % 29 == 0:
                     g_data.append(['Sr. No.', 'R', 'P', 'Grocery Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Grocery Item', 'Item Qty.'])
                 try:
-                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {grocery_regular_items[grocery_counter].product_unit}", "", f"{counter + int(grocery_item_count/2) + (grocery_item_count % 2 > 0)}", "", "", f"{grocery_regular_items[grocery_counter + 1].product_name}", f"{grocery_regular_items[grocery_counter + 1].product_qty} {grocery_regular_items[grocery_counter + 1].product_unit}"])
+                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", f"{counter + int(grocery_item_count/2) + (grocery_item_count % 2 > 0)}", "", "", f"{grocery_regular_items[grocery_counter + 1].product_name}", f"{grocery_regular_items[grocery_counter + 1].product_qty} {unit_dict[grocery_regular_items[grocery_counter + 1].product_unit]}"])
                 except IndexError:
-                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {grocery_regular_items[grocery_counter].product_unit}", "", "", "", "", "", ""])
+                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", "", "", "", "", ""])
                 counter += 1
             g_table = Table(g_data)
             g_table.setStyle(tStyle)
@@ -487,23 +497,23 @@ def generate_list_pdf(request):
             elements.append(PageBreak())
 
         # Creating Cosmetics / HouseHold Table
-        c_data = []
-        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"])
-        cosmetic_item_count = len(cosmetic_regular_items)
-        counter = 1
-        if cosmetic_item_count > 0:
-            for cosmetic_counter in range(0, cosmetic_item_count, 2):
-                if (counter-1) % 29 == 0:
-                    c_data.append(['Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.'])
-                try:
-                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {cosmetic_regular_items[cosmetic_counter].product_unit}", "", f"{counter + int(cosmetic_item_count/2) + (cosmetic_item_count % 2 > 0)}", "", "", f"{cosmetic_regular_items[cosmetic_counter + 1].product_name}", f"{cosmetic_regular_items[cosmetic_counter + 1].product_qty} {cosmetic_regular_items[cosmetic_counter + 1].product_unit}"])
-                except IndexError:
-                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {cosmetic_regular_items[cosmetic_counter].product_unit}", "", "", "", "", "", ""])
-                counter += 1
-            c_table = Table(c_data)
-            c_table.setStyle(tStyle)
-            elements.append(c_table)
-            elements.append(PageBreak())
+        # c_data = []
+        # cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"])
+        # cosmetic_item_count = len(cosmetic_regular_items)
+        # counter = 1
+        # if cosmetic_item_count > 0:
+        #     for cosmetic_counter in range(0, cosmetic_item_count, 2):
+        #         if (counter-1) % 29 == 0:
+        #             c_data.append(['Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.'])
+        #         try:
+        #             c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", f"{counter + int(cosmetic_item_count/2) + (cosmetic_item_count % 2 > 0)}", "", "", f"{cosmetic_regular_items[cosmetic_counter + 1].product_name}", f"{cosmetic_regular_items[cosmetic_counter + 1].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter + 1].product_unit]}"])
+        #         except IndexError:
+        #             c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", "", "", "", "", ""])
+        #         counter += 1
+        #     c_table = Table(c_data)
+        #     c_table.setStyle(tStyle)
+        #     elements.append(c_table)
+        #     elements.append(PageBreak())
 
         p.build(elements)
         buffer.seek(0)
@@ -512,6 +522,99 @@ def generate_list_pdf(request):
         return FileResponse(buffer, as_attachment=True, filename=filename)
     else:
         return redirect("mbook:index")
+
+
+@login_required
+def gen_month_txn(request):
+    transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year).order_by('txn_dop')
+    buffer = BytesIO()
+
+    pdf = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
+
+    elements = []    
+
+    tStyle = TableStyle([
+        ('ALIGN', (5, 0), (5, -1), 'RIGHT'),
+        ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+        ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black)
+    ])
+
+    tStyle_colspan = TableStyle([
+        ('SPAN', (0, -1), (-1, -1)),
+    ])
+
+    unit_dict = {
+            'KGS': 'KG',
+            'LTR': 'L',
+            'GMS': 'gms',
+            'MIL': 'ml',
+            'PKT': 'P',
+            'PCS': 'Pcs.'
+    }
+
+    txn_data = []
+    txn_count = len(transactions)
+    counter = 1
+    total_amount = 0.0
+    ccy = ""
+    if txn_count > 0:
+        for transaction in transactions:
+            if (counter - 1) % 40 == 0:
+                txn_data.append([
+                    "Sr. No.",
+                    "Purchase Date",
+                    "Purchased From",
+                    "Item",
+                    "Qty.",
+                    "Amount.",
+                ])
+            txn_data.append([
+                f"{counter}",
+                f"{transaction.txn_dop}",
+                f"{transaction.store.store_name}",
+                f"{transaction.product.product_name} - {transaction.product.product_code}",
+                f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
+                f"{transaction.txn_ccy} {round(transaction.txn_amount, 2)}",
+            ])
+
+            total_amount += transaction.txn_amount
+            ccy = transaction.txn_ccy
+            counter += 1
+
+        total_amount = round(total_amount, 2)
+        txn_data.append([
+            "",
+            "",
+            "",
+            "",
+            "Grand Total:",
+            f"{ccy} {total_amount}"
+        ])
+        txns = Table(txn_data)
+        txns.setStyle(tStyle)
+        elements.append(txns)
+    else:
+        txn_data.append([
+            "Sr. No.",
+            "Purchase Date",
+            "Purchased From",
+            "Item",
+            "Qty.",
+            "Amount.",
+        ])
+
+        txn_data.append(["No Transactions found to list."])
+        txns = Table(txn_data)
+        txns.setStyle(tStyle)
+        txns.setStyle(tStyle_colspan)
+        elements.append(txns)
+
+
+    pdf.build(elements)
+    buffer.seek(0)
+    filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+    return FileResponse(buffer, as_attachment=True, filename=filename)
+        
 
 
 # User management views

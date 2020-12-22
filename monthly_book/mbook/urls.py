@@ -22,5 +22,6 @@ urlpatterns = [
     path('update_txn/<int:id>/', views.update_txn, name="update_txn"),
     path('delete_txn/<int:id>/', views.delete_txn, name="delete_txn"),
     path('reports/', views.reports, name="reports"),
-    path('generate_list_pdf/', views.generate_list_pdf, name="generate_list_pdf")
+    path('generate_list_pdf/', views.generate_list_pdf, name="generate_list_pdf"),
+    path('gen_month_txn/', views.gen_month_txn, name="gen_month_txn"),
 ]
