@@ -454,14 +454,13 @@ def generate_list_pdf(request):
         buffer = BytesIO()
         elements = []
         p = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
-        tStyle = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
-            ('BACKGROUND', (0, 30), (-1, 30), colors.black),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('TEXTCOLOR', (0, 30), (-1, 30), colors.white),
+
+        g_table_style_data = [
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('GRID',(0,1),(-1,-1),1,colors.black),
-        ]) 
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ]
 
         unit_dict = {
             'KGS': 'KG',
@@ -482,35 +481,51 @@ def generate_list_pdf(request):
             for grocery_counter in range(0, grocery_item_count, 2):
                 if (counter-1) % 29 == 0:
                     g_data.append(['Sr. No.', 'R', 'P', 'Grocery Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Grocery Item', 'Item Qty.'])
+                    if counter > 1:
+                        g_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
+                        g_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
                 try:
                     g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", f"{counter + int(grocery_item_count/2) + (grocery_item_count % 2 > 0)}", "", "", f"{grocery_regular_items[grocery_counter + 1].product_name}", f"{grocery_regular_items[grocery_counter + 1].product_qty} {unit_dict[grocery_regular_items[grocery_counter + 1].product_unit]}"])
                 except IndexError:
                     g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", "", "", "", "", ""])
                 counter += 1
             g_table = Table(g_data)
-            g_table.setStyle(tStyle)
+            g_tStyle = TableStyle(g_table_style_data)
+            g_table.setStyle(g_tStyle)
             elements.append(g_table)
             elements.append(PageBreak())
 
         # Creating Cosmetics / HouseHold Table
-        # c_data = []
-        # cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"])
-        # cosmetic_item_count = len(cosmetic_regular_items)
-        # counter = 1
-        # if cosmetic_item_count > 0:
-        #     for cosmetic_counter in range(0, cosmetic_item_count, 2):
-        #         if (counter-1) % 29 == 0:
-        #             c_data.append(['Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.'])
-        #         try:
-        #             c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", f"{counter + int(cosmetic_item_count/2) + (cosmetic_item_count % 2 > 0)}", "", "", f"{cosmetic_regular_items[cosmetic_counter + 1].product_name}", f"{cosmetic_regular_items[cosmetic_counter + 1].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter + 1].product_unit]}"])
-        #         except IndexError:
-        #             c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", "", "", "", "", ""])
-        #         counter += 1
-        #     c_table = Table(c_data)
-        #     c_table.setStyle(tStyle)
-        #     elements.append(c_table)
-        #     elements.append(PageBreak())
 
+        c_table_style_data = [
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('GRID',(0,1),(-1,-1),1,colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ]
+
+        c_data = []
+        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"])
+        cosmetic_item_count = len(cosmetic_regular_items)
+        counter = 1
+        if cosmetic_item_count > 0:
+            for cosmetic_counter in range(0, cosmetic_item_count, 2):
+                if (counter-1) % 29 == 0:
+                    c_data.append(['Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.'])
+                    if counter > 1:
+                        c_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
+                        c_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
+                try:
+                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", f"{counter + int(cosmetic_item_count/2) + (cosmetic_item_count % 2 > 0)}", "", "", f"{cosmetic_regular_items[cosmetic_counter + 1].product_name}", f"{cosmetic_regular_items[cosmetic_counter + 1].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter + 1].product_unit]}"])
+                except IndexError:
+                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", "", "", "", "", ""])
+                counter += 1
+            c_table = Table(c_data)
+            c_tStyle = TableStyle(c_table_style_data)
+            c_table.setStyle(c_tStyle)
+            elements.append(c_table)
+            elements.append(PageBreak())
+        
         p.build(elements)
         buffer.seek(0)
         gen_datetime = datetime.now()
