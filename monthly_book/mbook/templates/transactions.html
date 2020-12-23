@@ -84,7 +84,7 @@
                             <td>{{ txn.txn_dop }}</td>
                             <td>{{ txn.product }}</td>
                             <td>{{ txn.store }}</td>
-                            <td>{{ txn.txn_ccy }} {{ txn.txn_amount }}</td>
+                            <td>{{ txn.txn_ccy }} {{ txn.txn_amount|floatformat:2 }}</td>
                             <td align="right">
                                 <a href="{% url 'mbook:view_txn' txn.id %}" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View Transaction Details"><i class="zmdi zmdi-eye"></i></a>
                                 <a href="{% url 'mbook:update_txn' txn.id %}" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit Transaction Details"><i class="zmdi zmdi-edit"></i></a>

@@ -1,0 +1,8 @@
+{% extends 'base.html'%} 
+{% block title %} Reports {% endblock title %} 
+{% block body %}
+    <div class="container mt-4">
+        <a href="{% url 'mbook:generate_list_pdf' %}" class="btn btn-lg btn-success p-5 m-2">Generate List</a>
+        <a href="{% url 'mbook:gen_month_txn' %}" class="btn btn-lg btn-info p-5 m-2">This Month Txns</a>
+    </div>
+{% endblock body %}

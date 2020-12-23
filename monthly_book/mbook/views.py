@@ -1,18 +1,26 @@
-from django.shortcuts import render, redirect, get_object_or_404
+# Django Imports
+from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.decorators import login_required
-from .models import Stores, Products, Transactions
-from datetime import date, datetime, timedelta
-from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
-from base64 import b64decode, b64encode
-from .forms import AddStoreForm, AddProductForm, AddTransactionForm
-import barcode
-from barcode.writer import ImageWriter
-from io import BytesIO
 from django.core.files import File
 from django.conf import settings
-import os
+from django.http import FileResponse
+
+# Core and 3rd Party Imports
+from datetime import date, datetime
+from base64 import b64decode, b64encode
+import barcode, os
+from barcode.writer import ImageWriter
+from io import BytesIO
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageBreak
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.units import inch
+
+# Application Imports
+from .models import Stores, Products, Transactions
+from .forms import AddStoreForm, AddProductForm, AddTransactionForm
 
 
 # Error Success function
@@ -30,10 +38,21 @@ def view_error_success(request, args):
     return (request, args)
 
 
+# Login Required Decorator
+def login_required(function):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            request.session["error"] = "You are not authenticated. Please authenticate yourself here."
+            return redirect("mbook:index")
+        else:
+            return function(request, *args, **kwargs)
+    return wrapper
+
+
 # Create your views here.
 def index(request):
+    args = {}
     if request.user.is_authenticated:
-        args = {}
         current_month = datetime.now().month
         current_year = datetime.now().year
         stores_count = Stores.objects.all().count()
@@ -46,14 +65,15 @@ def index(request):
         total_txn_amt = 0.0
         for txn in total_txns_month:
             total_txn_amt += txn.txn_amount
-        args["total_txn_amt"] = total_txn_amt
+        args["total_txn_amt"] = round(total_txn_amt, 2)
         total_extra_txn_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year, product__product_is_extra=True).all()
         total_extra_amt = 0.0
         for extra_txn in total_extra_txn_month:
             total_extra_amt += extra_txn.txn_amount
-        args["total_extra_amt"] = total_extra_amt
+        args["total_extra_amt"] = round(total_extra_amt, 2)
         return render(request, "index.html", args)
     else:
+        (request, args) = view_error_success(request, args)
         return render(request, "index.html", {})
 
 
@@ -201,27 +221,23 @@ def update_product(request, id):
                     product.product_qty = products_form.cleaned_data.get('product_qty')
                 if not product.product_unit == products_form.cleaned_data.get('product_unit'):
                     product.product_unit = products_form.cleaned_data.get('product_unit')
-                if not product.product_code == products_form.cleaned_data.get('product_code') or not product.product_barcode or not os.path.isfile(os.path.join(settings.MEDIA_ROOT, str(product.product_barcode))):
-                    if not(product.product_code != "" or product.product_code != "0000000000000" or product.product_code != "0"):
-                        product.product_code = products_form.cleaned_data.get('product_code')
-                        EAN = barcode.get_barcode_class('ean13')
-                        product_barcode = EAN(product.product_code, writer=ImageWriter())
-                        buffer = BytesIO()
-                        product_barcode.write(buffer)
-                        product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
-                    else:
-                        product.product_code = "0000000000000"
-                        EAN = barcode.get_barcode_class('ean13')
-                        product_barcode = EAN(product.product_code, writer=ImageWriter())
-                        buffer = BytesIO()
-                        product_barcode.write(buffer)
-                        product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                if not product.product_code == products_form.cleaned_data.get('product_code'):
+                    product.product_code = products_form.cleaned_data.get('product_code')
                 if not product.product_rate_per_unit == products_form.cleaned_data.get('product_rate_per_unit'):
                     product.product_rate_per_unit = products_form.cleaned_data.get('product_rate_per_unit')
                 if not product.product_ccy == products_form.cleaned_data.get('product_ccy'):
                     product.product_ccy = products_form.cleaned_data.get('product_ccy')
                 if not product.product_is_extra == products_form.cleaned_data.get('product_is_extra'):
                     product.product_is_extra = products_form.cleaned_data.get('product_is_extra')
+                # Refreshing Barcode Image
+                if product.product_barcode or os.path.isfile(os.path.join(settings.MEDIA_ROOT, str(product.product_barcode))):
+                    product.product_barcode.delete(save=False)
+                product.product_code = products_form.cleaned_data.get('product_code')
+                EAN = barcode.get_barcode_class('ean13')
+                product_barcode = EAN(product.product_code, writer=ImageWriter())
+                buffer = BytesIO()
+                product_barcode.write(buffer)
+                product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
                 product.save()
                 request.session["success"] = "{} - product saved successfully!".format(product.product_name)
                 return redirect('mbook:products')
@@ -405,6 +421,7 @@ def delete_txn(request, id):
     else:
         return redirect('mbook:index')
 
+
 @login_required
 def list_transactions(request):
     if request.user.is_authenticated:
@@ -420,6 +437,198 @@ def list_transactions(request):
     else:
         return redirect('mbook:index')
 
+
+@login_required
+def reports(request):
+    if request.user.is_authenticated:
+        args = {}
+        (request, args) = view_error_success(request, args)
+        return render(request, "reports.html", args)
+    else:
+        return redirect("mbook:index")
+
+
+@login_required
+def generate_list_pdf(request):
+    if request.user.is_authenticated:
+        buffer = BytesIO()
+        elements = []
+        p = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
+
+        g_table_style_data = [
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('GRID',(0,1),(-1,-1),1,colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ]
+
+        unit_dict = {
+            'KGS': 'KG',
+            'LTR': 'L',
+            'GMS': 'gms',
+            'MIL': 'ml',
+            'PKT': 'P',
+            'PCS': 'Pcs.'
+        }
+
+
+        # Creating grocery table
+        g_data = []
+        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type="GRY")
+        grocery_item_count = len(grocery_regular_items)
+        counter = 1
+        if grocery_item_count > 0:
+            for grocery_counter in range(0, grocery_item_count, 2):
+                if (counter-1) % 29 == 0:
+                    g_data.append(['Sr. No.', 'R', 'P', 'Grocery Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Grocery Item', 'Item Qty.'])
+                    if counter > 1:
+                        g_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
+                        g_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
+                try:
+                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", f"{counter + int(grocery_item_count/2) + (grocery_item_count % 2 > 0)}", "", "", f"{grocery_regular_items[grocery_counter + 1].product_name}", f"{grocery_regular_items[grocery_counter + 1].product_qty} {unit_dict[grocery_regular_items[grocery_counter + 1].product_unit]}"])
+                except IndexError:
+                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", "", "", "", "", ""])
+                counter += 1
+            g_table = Table(g_data)
+            g_tStyle = TableStyle(g_table_style_data)
+            g_table.setStyle(g_tStyle)
+            elements.append(g_table)
+            elements.append(PageBreak())
+
+        # Creating Cosmetics / HouseHold Table
+
+        c_table_style_data = [
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('GRID',(0,1),(-1,-1),1,colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ]
+
+        c_data = []
+        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"])
+        cosmetic_item_count = len(cosmetic_regular_items)
+        counter = 1
+        if cosmetic_item_count > 0:
+            for cosmetic_counter in range(0, cosmetic_item_count, 2):
+                if (counter-1) % 29 == 0:
+                    c_data.append(['Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.'])
+                    if counter > 1:
+                        c_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
+                        c_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
+                try:
+                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", f"{counter + int(cosmetic_item_count/2) + (cosmetic_item_count % 2 > 0)}", "", "", f"{cosmetic_regular_items[cosmetic_counter + 1].product_name}", f"{cosmetic_regular_items[cosmetic_counter + 1].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter + 1].product_unit]}"])
+                except IndexError:
+                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", "", "", "", "", ""])
+                counter += 1
+            c_table = Table(c_data)
+            c_tStyle = TableStyle(c_table_style_data)
+            c_table.setStyle(c_tStyle)
+            elements.append(c_table)
+            elements.append(PageBreak())
+        
+        p.build(elements)
+        buffer.seek(0)
+        gen_datetime = datetime.now()
+        filename = f"list_{gen_datetime.year}{gen_datetime.month}{gen_datetime.day}{gen_datetime.hour}{gen_datetime.minute}{gen_datetime.second}"
+        return FileResponse(buffer, as_attachment=True, filename=filename)
+    else:
+        return redirect("mbook:index")
+
+
+@login_required
+def gen_month_txn(request):
+    transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year).order_by('txn_dop')
+    buffer = BytesIO()
+
+    pdf = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
+
+    elements = []    
+
+    tStyle = TableStyle([
+        ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
+        ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+        ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black)
+    ])
+
+    tStyle_colspan = TableStyle([
+        ('SPAN', (0, -1), (-1, -1)),
+    ])
+
+    unit_dict = {
+            'KGS': 'KG',
+            'LTR': 'L',
+            'GMS': 'gms',
+            'MIL': 'ml',
+            'PKT': 'P',
+            'PCS': 'Pcs.'
+    }
+
+    txn_data = []
+    txn_count = len(transactions)
+    counter = 1
+    total_amount = 0.0
+    ccy = ""
+    if txn_count > 0:
+        for transaction in transactions:
+            if (counter - 1) == 0:
+                txn_data.append([
+                    "Sr. No.",
+                    "Purchase Date",
+                    "Purchased From",
+                    "Item",
+                    "Qty.",
+                    "Amount.",
+                ])
+            txn_data.append([
+                f"{counter}.",
+                f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
+                f"{transaction.store.store_name}",
+                f"{transaction.product.product_code} - {transaction.product.product_name}",
+                f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
+                "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
+            ])
+
+            total_amount += transaction.txn_amount
+            ccy = transaction.txn_ccy
+            counter += 1
+
+        total_amount = round(total_amount, 2)
+        txn_data.append([
+            "",
+            "",
+            "",
+            "",
+            "Grand Total:",
+            "{} {:.2f}".format(ccy, total_amount)
+        ])
+        txns = Table(txn_data)
+        txns.setStyle(tStyle)
+        elements.append(txns)
+    else:
+        txn_data.append([
+            "Sr. No.",
+            "Purchase Date",
+            "Purchased From",
+            "Item",
+            "Qty.",
+            "Amount.",
+        ])
+
+        txn_data.append(["No Transactions found to list."])
+        txns = Table(txn_data)
+        txns.setStyle(tStyle)
+        txns.setStyle(tStyle_colspan)
+        elements.append(txns)
+
+
+    pdf.build(elements)
+    buffer.seek(0)
+    filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+    return FileResponse(buffer, as_attachment=True, filename=filename)
+        
 
 # User management views
 def user_login(request):

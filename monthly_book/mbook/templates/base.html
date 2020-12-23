@@ -96,22 +96,20 @@
                 <div class="container col-sm-4"></div>
                 <div class="container col-sm-4 container-center">
                     <h2>Login</h2>
+                    {% if error %}
+                        <div class = "alert alert-danger alert-dismissible">
+                            <button type = "button" class = "close" data-dismiss = "alert">&times;</button>
+                            <strong>Error!</strong> {{error}}
+                        </div>
+                    {% endif %}
+                    {% if success %}
+                        <div class = "alert alert-success alert-dismissible">
+                            <button type = "button" class = "close" data-dismiss = "alert">&times;</button>
+                            <strong>Success!</strong> {{success}}
+                        </div>
+                    {% endif %}
                     <form action="{% url 'mbook:login' %}" method="POST">
                         {% csrf_token %}
-                        
-                        {% if error %}
-                            <div class = "alert alert-danger alert-dismissible">
-                                <button type = "button" class = "close" data-dismiss = "alert">&times;</button>
-                                <strong>Error!</strong> {{error}}
-                            </div>
-                        {% endif %}
-                        {% if success %}
-                            <div class = "alert alert-success alert-dismissible">
-                                <button type = "button" class = "close" data-dismiss = "alert">&times;</button>
-                                <strong>Success!</strong> {{success}}
-                            </div>
-                        {% endif %}
-                            
                         <div class = "form-group">
                             <input type = "text" class = "form-control" name="username"
                             id = "username" placeholder = "Username">
@@ -148,7 +146,7 @@
                     <a class="nav-link" href="{% url 'mbook:stores' %}">Stores</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="#">Reports</a>
+                    <a class="nav-link" href="{% url 'mbook:reports' %}">Reports</a>
                   </li>
                 </ul>
                 <ul class = "navbar-nav">
