@@ -14,13 +14,13 @@ from barcode.writer import ImageWriter
 from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageBreak
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageBreak, Paragraph
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch, cm
 
 # Application Imports
 from .models import Stores, Products, Transactions
-from .forms import AddStoreForm, AddProductForm, AddTransactionForm
+from .forms import AddStoreForm, AddProductForm, AddTransactionForm, UserPasswordChangeForm
 
 
 # Error Success function
@@ -505,13 +505,13 @@ def generate_list_pdf(request):
         ]
 
         c_data = []
-        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"])
+        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"]).order_by('product_type')
         cosmetic_item_count = len(cosmetic_regular_items)
         counter = 1
         if cosmetic_item_count > 0:
             for cosmetic_counter in range(0, cosmetic_item_count, 2):
                 if (counter-1) % 29 == 0:
-                    c_data.append(['Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Cosmetic Item', 'Item Qty.'])
+                    c_data.append(['Sr. No.', 'R', 'P', 'Cosmetic / Household Item', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Cosmetic / Household Item', 'Item Qty.'])
                     if counter > 1:
                         c_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
                         c_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
@@ -550,7 +550,8 @@ def gen_month_txn(request):
         ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
         ('BACKGROUND', (0, 0), (-1, 0), colors.black),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black)
+        ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP')
     ])
 
     tStyle_colspan = TableStyle([
@@ -565,6 +566,8 @@ def gen_month_txn(request):
             'PKT': 'P',
             'PCS': 'Pcs.'
     }
+
+    styles = getSampleStyleSheet()
 
     txn_data = []
     txn_count = len(transactions)
@@ -586,7 +589,7 @@ def gen_month_txn(request):
                 f"{counter}.",
                 f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
                 f"{transaction.store.store_name}",
-                f"{transaction.product.product_code} - {transaction.product.product_name}",
+                Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
                 f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
                 "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
             ])
@@ -604,7 +607,7 @@ def gen_month_txn(request):
             "Grand Total:",
             "{} {:.2f}".format(ccy, total_amount)
         ])
-        txns = Table(txn_data)
+        txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
         txns.setStyle(tStyle)
         elements.append(txns)
     else:
@@ -618,7 +621,7 @@ def gen_month_txn(request):
         ])
 
         txn_data.append(["No Transactions found to list."])
-        txns = Table(txn_data)
+        txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
         txns.setStyle(tStyle)
         txns.setStyle(tStyle_colspan)
         elements.append(txns)
@@ -653,3 +656,32 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect('mbook:index')
+
+
+@login_required
+def change_password(request):
+    user = request.user
+    if request.method == "POST":
+        form_password = UserPasswordChangeForm(user = user, data=request.POST)
+        print(form_password.errors)
+        if form_password.is_valid():
+            form_password.save()
+            request.session["success"] = "Password Changed Successfully."
+            logout(request)
+            return redirect("mbook:index")
+        else:
+            error = ""
+            if 'old_password' in form_password.errors:
+                error += form_password.errors['old_password'][0]
+            if 'new_password1' in form_password.errors:
+                error += form_password.errors['new_password1'][0]
+            if 'new_password2' in form_password.errors:
+                error += form_password.errors['new_password2'][0]
+            request.session["error"] = error
+            return redirect("mbook:change_password")
+    else:
+        form_password = UserPasswordChangeForm(user=user)
+        args = {}
+        args["form_password"] = form_password
+        (request, args) = view_error_success(request, args)
+        return render(request, "change_password.html", args)
