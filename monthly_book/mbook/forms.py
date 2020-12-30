@@ -77,7 +77,9 @@ class AddProductForm(forms.ModelForm):
 
     product_rate_per_unit = forms.FloatField(required=True, widget=forms.NumberInput(attrs={
         'class':'form-control',
-        'placeholder':'Rate per Unit'
+        'placeholder':'Rate per Unit',
+        'min':'0',
+        'oninput':"validity.valid||(value='');"
     }), label="Product Rate")
 
     product_ccy = forms.ChoiceField(choices=[
@@ -168,7 +170,9 @@ class AddTransactionForm(forms.ModelForm):
 
     txn_amount = forms.FloatField(required=True, widget=forms.NumberInput(attrs={
         'class':'form-control',
-        'placeholder':'Rate per Unit'
+        'placeholder':'Rate per Unit',
+        'min':'0',
+        'oninput':"validity.valid||(value='');"
     }), label="Transaction Amount")
 
     txn_ccy = forms.ChoiceField(choices=[
