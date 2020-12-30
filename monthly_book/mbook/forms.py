@@ -98,6 +98,7 @@ class AddProductForm(forms.ModelForm):
         ('VLF', 'Vegetables / Leaves / Fruits'),
         ('ESS', 'Essentials'),
         ('HLD', 'Household'),
+        ('DRY', 'Dry Fruits'),
         ('OTH', 'Others')
     ], required=True, widget=forms.Select(attrs={
         'class':'form-control',

@@ -474,7 +474,7 @@ def generate_list_pdf(request):
 
         # Creating grocery table
         g_data = []
-        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type="GRY")
+        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY", "DRY"])
         grocery_item_count = len(grocery_regular_items)
         counter = 1
         if grocery_item_count > 0:
@@ -644,6 +644,7 @@ def expense_charts(request):
     household_spend = 0.0
     essentials_spend = 0.0
     vegetables_spend = 0.0
+    dryfruits_spend = 0.0
     other_spend = 0.0
     regular_spend = 0.0
     extra_spend = 0.0
@@ -658,6 +659,8 @@ def expense_charts(request):
             essentials_spend += txn.txn_amount
         if txn.product.product_type == "VLF":
             vegetables_spend += txn.txn_amount
+        if txn.product.product_type == "DRY":
+            dryfruits_spend += txn.txn_amount
         if txn.product.product_type == "OTH":
             other_spend += txn.txn_amount
         if txn.product.product_is_extra:
@@ -673,6 +676,7 @@ def expense_charts(request):
     args["essentials_spend"] = essentials_spend
     args["other_spend"] = other_spend
     args["regular_spend"] = regular_spend
+    args["dryfruits_spend"] = dryfruits_spend
     args["extra_spend"] = extra_spend
     args["m0"] = datetime_0
     # Past 6 months data
@@ -688,6 +692,7 @@ def expense_charts(request):
         'household_spend':0.0,
         'essentials_spend':0.0,
         'vegetables_spend':0.0,
+        'dryfruits_spend':0.0,
         'other_spend':0.0
     }
     for txn in m_1_txns:
@@ -701,6 +706,8 @@ def expense_charts(request):
             m1_txns['essentials_spend'] += txn.txn_amount
         if txn.product.product_type == "VLF":
             m1_txns['vegetables_spend'] += txn.txn_amount
+        if txn.product.product_type == "DRY":
+            m1_txns['dryfruits_spend'] += txn.txn_amount
         if txn.product.product_type == "OTH":
             m1_txns['other_spend'] += txn.txn_amount
     args["m1"] = datetime_1
@@ -718,6 +725,7 @@ def expense_charts(request):
         'household_spend':0.0,
         'essentials_spend':0.0,
         'vegetables_spend':0.0,
+        'dryfruits_spend':0.0,
         'other_spend':0.0
     }
     for txn in m_2_txns:
@@ -731,6 +739,8 @@ def expense_charts(request):
             m2_txns['essentials_spend'] += txn.txn_amount
         if txn.product.product_type == "VLF":
             m2_txns['vegetables_spend'] += txn.txn_amount
+        if txn.product.product_type == "DRY":
+            m2_txns['dryfruits_spend'] += txn.txn_amount
         if txn.product.product_type == "OTH":
             m2_txns['other_spend'] += txn.txn_amount
     args["m2"] = datetime_2
@@ -748,6 +758,7 @@ def expense_charts(request):
         'household_spend':0.0,
         'essentials_spend':0.0,
         'vegetables_spend':0.0,
+        'dryfruits_spend':0.0,
         'other_spend':0.0
     }
     for txn in m_3_txns:
@@ -761,6 +772,8 @@ def expense_charts(request):
             m3_txns['essentials_spend'] += txn.txn_amount
         if txn.product.product_type == "VLF":
             m3_txns['vegetables_spend'] += txn.txn_amount
+        if txn.product.product_type == "DRY":
+            m3_txns['dryfruits_spend'] += txn.txn_amount
         if txn.product.product_type == "OTH":
             m3_txns['other_spend'] += txn.txn_amount
     args["m3"] = datetime_3
@@ -779,6 +792,7 @@ def expense_charts(request):
         'household_spend':0.0,
         'essentials_spend':0.0,
         'vegetables_spend':0.0,
+        'dryfruits_spend':0.0,
         'other_spend':0.0
     }
     for txn in m_4_txns:
@@ -792,6 +806,8 @@ def expense_charts(request):
             m4_txns['essentials_spend'] += txn.txn_amount
         if txn.product.product_type == "VLF":
             m4_txns['vegetables_spend'] += txn.txn_amount
+        if txn.product.product_type == "DRY":
+            m4_txns['dryfruits_spend'] += txn.txn_amount
         if txn.product.product_type == "OTH":
             m4_txns['other_spend'] += txn.txn_amount
     args["m4"] = datetime_4
@@ -810,6 +826,7 @@ def expense_charts(request):
         'household_spend':0.0,
         'essentials_spend':0.0,
         'vegetables_spend':0.0,
+        'dryfruits_spend':0.0,
         'other_spend':0.0
     }
     for txn in m_5_txns:
@@ -823,6 +840,8 @@ def expense_charts(request):
             m5_txns['essentials_spend'] += txn.txn_amount
         if txn.product.product_type == "VLF":
             m5_txns['vegetables_spend'] += txn.txn_amount
+        if txn.product.product_type == "DRY":
+            m_txns['dryfruits_spend'] += txn.txn_amount
         if txn.product.product_type == "OTH":
             m5_txns['other_spend'] += txn.txn_amount
     args["m5"] = datetime_5

@@ -115,6 +115,8 @@ Product - {{transaction.product.product_name}} - {{transaction.store.store_name}
                                                             Essentials
                                                         {% elif transaction.product.product_type == "HLD" %}
                                                             Household
+                                                        {% elif transaction.product.product_type == "DRY" %}
+                                                            Dry Fruits
                                                         {% else %}
                                                             Others
                                                         {% endif %}    
