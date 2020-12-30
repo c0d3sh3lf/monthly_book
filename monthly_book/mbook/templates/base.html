@@ -162,7 +162,7 @@
                                 <div class="dropdown-divider"></div>
                             {% endif %}
                             <!-- <a class = "dropdown-item" href="#"><i class="zmdi zmdi-settings"></i> Profile Settings</a> -->
-                            <a class = "dropdown-item" href="#"><i class="zmdi zmdi-lock"></i> Change Password</a>
+                            <a class = "dropdown-item" href="{% url 'mbook:change_password' %}"><i class="zmdi zmdi-lock"></i> Change Password</a>
                             <a class = "dropdown-item" href="{% url 'mbook:logout' %}"><i class="zmdi zmdi-power"></i> Logout</a>
                         </div>
                     </li>

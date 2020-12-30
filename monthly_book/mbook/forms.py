@@ -1,6 +1,6 @@
 from django import forms
-# from django.contrib.auth.models import User
-# from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm, UserChangeForm
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm, UserChangeForm
 from django.forms import fields, widgets
 from django.forms.models import ModelForm
 from .models import Stores, Products, Transactions
@@ -77,7 +77,9 @@ class AddProductForm(forms.ModelForm):
 
     product_rate_per_unit = forms.FloatField(required=True, widget=forms.NumberInput(attrs={
         'class':'form-control',
-        'placeholder':'Rate per Unit'
+        'placeholder':'Rate per Unit',
+        'min':'0',
+        'oninput':"validity.valid||(value='');"
     }), label="Product Rate")
 
     product_ccy = forms.ChoiceField(choices=[
@@ -168,7 +170,9 @@ class AddTransactionForm(forms.ModelForm):
 
     txn_amount = forms.FloatField(required=True, widget=forms.NumberInput(attrs={
         'class':'form-control',
-        'placeholder':'Rate per Unit'
+        'placeholder':'Rate per Unit',
+        'min':'0',
+        'oninput':"validity.valid||(value='');"
     }), label="Transaction Amount")
 
     txn_ccy = forms.ChoiceField(choices=[
@@ -190,3 +194,35 @@ class AddTransactionForm(forms.ModelForm):
         if commit:
             txn.save()
         return txn
+
+
+class UserPasswordChangeForm(PasswordChangeForm):
+    old_password = forms.CharField(required=True, widget=forms.PasswordInput(attrs={
+        'class':'form-control',
+        'placeholder':'Old Password'
+    }), help_text="<ul><li>Your password can’t be too similar to your other personal information.</li><li>Your password must contain at least 8 characters.</li><li>Your password can’t be a commonly used password.</li><li>Your password can’t be entirely numeric.</li></ul>",
+    label="Old Password")
+
+    new_password1 = forms.CharField(required=True, widget=forms.PasswordInput(attrs={
+        'class':'form-control',
+        'placeholder':'New Password'
+    }), help_text="This should be different from your previous password.",
+    label="New  Password")
+
+    new_password2 = forms.CharField(required=True, widget=forms.PasswordInput(attrs={
+        'class':'form-control',
+        'placeholder':'Confirm Password'
+    }), help_text="This should match the password in the Password field.",
+    label="Confirm  Password")
+
+    class Meta:
+        model = User
+        fields = ('old_password', 'new_password1', 'new_password2')
+
+    def save(self, commit=True):
+        user = super(UserPasswordChangeForm, self).save(commit=False)
+
+        if commit:
+            user.save()
+
+        return user

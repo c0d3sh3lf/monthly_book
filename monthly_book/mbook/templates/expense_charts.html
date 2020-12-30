@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Expense Charts
+{% endblock title %}
+
+{% block scripts %}
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+{% endblock scripts %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-6">
+            <div id="cat_pie_chart_div" class="mt-3" style="height: 500px;"></div>
+        </div>
+        <div class="col-6">
+            <div id="reg_pie_chart_div" class="mt-3" style="height: 500px;"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div id="last_six_line_graph" class="mt-3" style="height: 500px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Chart Data -->
+<script type="text/javascript">
+    google.charts.load("current", {packages:["corechart", "line"]});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+        // Category based pie chart
+        var cat_data = google.visualization.arrayToDataTable([
+            ['Category', 'Transaction Amount'],
+            ['Grocery', {{grocery_spend}}],
+            ['Cosmetics', {{cosmetic_spend}}],
+            ['Household', {{household_spend}}],
+            ['Essentials', {{essentials_spend}}],
+            ['Veg / Fruits / Greens', {{vegetables_spend}}],
+            ['Others', {{other_spend}}],
+        ]); // data table array to come from python
+        var cat_pie_options = {
+            title: 'Category Wise Expense',
+            pieHole: 0.4,
+        };
+
+        var cat_pie_chart = new google.visualization.PieChart(document.getElementById('cat_pie_chart_div'));
+        cat_pie_chart.draw(cat_data, cat_pie_options)
+
+        // Regular vs Extra Spend Chart
+        var reg_data = google.visualization.arrayToDataTable([
+            ['Product Type', 'Transaction Amount'],
+            ['Regular', {{regular_spend}}],
+            ['Extra', {{extra_spend}}]
+        ]); // data table array to come from python
+        var reg_pie_options = {
+            title: 'Regular v/s Extra Expense',
+            pieHole: 0.4
+        };
+
+        var reg_pie_chart = new google.visualization.PieChart(document.getElementById('reg_pie_chart_div'));
+        reg_pie_chart.draw(reg_data, reg_pie_options)
+
+        //Last 6 months category wise expense
+        var last_six_data = new google.visualization.DataTable();
+        last_six_data.addColumn('datetime', 'Month / Year');
+        last_six_data.addColumn('number', 'Grocery');
+        last_six_data.addColumn('number', 'Cosmetics');
+        last_six_data.addColumn('number', 'Household');
+        last_six_data.addColumn('number', 'Essentials');
+        last_six_data.addColumn('number', 'Veg / Fruits / Greens');
+        last_six_data.addColumn('number', 'Others');
+
+        last_six_data.addRows([
+            [new Date({{m0.year}}, {{m0.month}} - 1, 1, 0, 0), {{grocery_spend}}, {{cosmetic_spend}}, {{household_spend}}, {{essentials_spend}}, {{vegetables_spend}}, {{other_spend}}],
+            [new Date({{m1.year}}, {{m1.month}} - 1, 1, 0, 0), {{m1_txns.grocery_spend}}, {{m1_txns.cosmetic_spend}}, {{m1_txns.household_spend}}, {{m1_txns.essentials_spend}}, {{m1_txns.vegetables_spend}}, {{m1_txns.other_spend}}],
+            [new Date({{m2.year}}, {{m2.month}} - 1, 1, 0, 0), {{m2_txns.grocery_spend}}, {{m2_txns.cosmetic_spend}}, {{m2_txns.household_spend}}, {{m2_txns.essentials_spend}}, {{m2_txns.vegetables_spend}}, {{m2_txns.other_spend}}],
+            [new Date({{m3.year}}, {{m3.month}} - 1, 1, 0, 0), {{m3_txns.grocery_spend}}, {{m3_txns.cosmetic_spend}}, {{m3_txns.household_spend}}, {{m3_txns.essentials_spend}}, {{m3_txns.vegetables_spend}}, {{m3_txns.other_spend}}],
+            [new Date({{m4.year}}, {{m4.month}} - 1, 1, 0, 0), {{m4_txns.grocery_spend}}, {{m4_txns.cosmetic_spend}}, {{m4_txns.household_spend}}, {{m4_txns.essentials_spend}}, {{m4_txns.vegetables_spend}}, {{m4_txns.other_spend}}],
+            [new Date({{m5.year}}, {{m5.month}} - 1, 1, 0, 0), {{m5_txns.grocery_spend}}, {{m5_txns.cosmetic_spend}}, {{m5_txns.household_spend}}, {{m5_txns.essentials_spend}}, {{m5_txns.vegetables_spend}}, {{m5_txns.other_spend}}],
+        ]);
+
+        var last_six_options = {
+            chart: {
+              title: 'Last 6 months expense trend - Category wise',
+            },
+            hAxis: { title: 'Month / Year' },
+            vAxis: { title: 'Amount (AED)' },
+            curveType: 'function',
+            height: 500
+          };
+
+        var last_six_line_chart = new google.charts.Line(document.getElementById('last_six_line_graph'));
+        last_six_line_chart.draw(last_six_data, google.charts.Line.convertOptions(last_six_options));
+
+    }
+</script>
+
+{% endblock body %}

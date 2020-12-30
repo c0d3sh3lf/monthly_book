@@ -3,6 +3,11 @@
 {% block body %}
     <div class="container mt-4">
         <a href="{% url 'mbook:generate_list_pdf' %}" class="btn btn-lg btn-success p-5 m-2">Generate List</a>
-        <a href="{% url 'mbook:gen_month_txn' %}" class="btn btn-lg btn-info p-5 m-2">This Month Txns</a>
+        <a href="{% url 'mbook:gen_month_txn' %}" class="btn btn-lg btn-info p-5 m-2">Current Month Txns</a>
+        <a href="{% url 'mbook:expense_charts' %}" class="btn btn-lg btn-warning p-5 m-2">Expense Charts</a>
+        <a href="#" class="btn btn-lg btn-primary p-5 m-2">Monthly Transactions</a>
+        <a href="#" class="btn btn-lg btn-secondary p-5 m-2">Quarterly Transactions</a>
+        <a href="#" class="btn btn-lg btn-dark p-5 m-2">Half Yearly Transactions</a>
+        <a href="#" class="btn btn-lg btn-danger p-5 m-2">Generate Transaction Statement</a>
     </div>
 {% endblock body %}
