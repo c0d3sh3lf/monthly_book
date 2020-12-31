@@ -474,7 +474,7 @@ def generate_list_pdf(request):
 
         # Creating grocery table
         g_data = []
-        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY", "DRY"])
+        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY"])
         grocery_item_count = len(grocery_regular_items)
         counter = 1
         if grocery_item_count > 0:
@@ -493,10 +493,32 @@ def generate_list_pdf(request):
             g_tStyle = TableStyle(g_table_style_data)
             g_table.setStyle(g_tStyle)
             elements.append(g_table)
+
+
+        # Creating grocery table
+        df_data = []
+        dry_fruit_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["DRY"])
+        dry_fruit_item_count = len(dry_fruit_regular_items)
+        counter = 1
+        if dry_fruit_item_count > 0:
+            for dry_fruit_counter in range(0, dry_fruit_item_count, 2):
+                if (counter-1) % 29 == 0:
+                    df_data.append(['Sr. No.', 'R', 'P', 'Dry Fruits', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Dry Fruits', 'Item Qty.'])
+                    if counter > 1:
+                        g_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
+                        g_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
+                try:
+                    df_data.append([f"{counter}", "", "", f"{dry_fruit_regular_items[dry_fruit_counter].product_name}", f"{dry_fruit_regular_items[dry_fruit_counter].product_qty} {unit_dict[dry_fruit_regular_items[dry_fruit_counter].product_unit]}", "", f"{counter + int(dry_fruit_item_count/2) + (dry_fruit_item_count % 2 > 0)}", "", "", f"{dry_fruit_regular_items[dry_fruit_counter + 1].product_name}", f"{dry_fruit_regular_items[dry_fruit_counter + 1].product_qty} {unit_dict[dry_fruit_regular_items[dry_fruit_counter + 1].product_unit]}"])
+                except IndexError:
+                    df_data.append([f"{counter}", "", "", f"{dry_fruit_regular_items[dry_fruit_counter].product_name}", f"{dry_fruit_regular_items[dry_fruit_counter].product_qty} {unit_dict[dry_fruit_regular_items[dry_fruit_counter].product_unit]}", "", "", "", "", "", ""])
+                counter += 1
+            df_table = Table(df_data)
+            df_tStyle = TableStyle(g_table_style_data)
+            df_table.setStyle(df_tStyle)
+            elements.append(df_table)
             elements.append(PageBreak())
 
         # Creating Cosmetics / HouseHold Table
-
         c_table_style_data = [
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('GRID',(0,1),(-1,-1),1,colors.black),
