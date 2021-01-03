@@ -1,4 +1,5 @@
 monthly_book/media/
 .DS_Store
+**/.DS_Store
 venv/
 db.json
