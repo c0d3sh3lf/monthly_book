@@ -55,9 +55,9 @@ Product - {{transaction.product.product_name}} - {{transaction.store.store_name}
                                             <td align="right"><b>Location:</b></td>
                                             <td>
                                                 {% if transaction.store.store_type == "ONL" %}
-                                                    <a href="{{ transaction.store.store_address }}" target="blank">{{ transaction.store.store_address }}</a>
+                                                    <a href="{{ transaction.store.store_address }}" target="blank">{{ transaction.store.store_address|linebreaks }}</a>
                                                 {% else %}
-                                                    {{ transaction.store.store_address }}
+                                                    {{ transaction.store.store_address|linebreaks }}
                                                 {% endif %}    
                                             </td>
                                         </tr>
@@ -73,7 +73,7 @@ Product - {{transaction.product.product_name}} - {{transaction.store.store_name}
                                         </tr>
                                         <tr>
                                             <td align="right"><b>Remarks:</b></td>
-                                            <td>{{transaction.txn_remarks}}</td>
+                                            <td>{{transaction.txn_remarks|linebreaks}}</td>
                                         </tr>
                                         <tr>
                                             <td align="right"><b>Added By:</b></td>
@@ -104,7 +104,7 @@ Product - {{transaction.product.product_name}} - {{transaction.store.store_name}
                                                 </tr>
                                                 <tr>
                                                     <td align="right"><b>Description:</b></td>
-                                                    <td>{{transaction.product.product_desc}}</td>
+                                                    <td>{{transaction.product.product_desc|linebreaks}}</td>
                                                 </tr>
                                                 <tr>
                                                     <td align="right"><b>Product Type:</b></td>
