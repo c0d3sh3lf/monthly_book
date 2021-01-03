@@ -1,13 +1,140 @@
 {% extends 'base.html'%} 
-{% block title %} Reports {% endblock title %} 
+{% block title %} Reports {% endblock title %}
+{% block scripts %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css" integrity="sha256-b88RdwbRJEzRx95nCuuva+hO5ExvXXnpX+78h8DjyOE=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js" integrity="sha256-/7FLTdzP6CfC1VBAj/rsp3Rinuuu9leMRGd354hvk0k=" crossorigin="anonymous"></script>
+{% endblock scripts %}
 {% block body %}
     <div class="container mt-4">
         <a href="{% url 'mbook:generate_list_pdf' %}" class="btn btn-lg btn-success p-5 m-2">Generate List</a>
         <a href="{% url 'mbook:gen_month_txn' %}" class="btn btn-lg btn-info p-5 m-2">Current Month Txns</a>
         <a href="{% url 'mbook:expense_charts' %}" class="btn btn-lg btn-warning p-5 m-2">Expense Charts</a>
-        <a href="#" class="btn btn-lg btn-primary p-5 m-2">Monthly Transactions</a>
-        <a href="#" class="btn btn-lg btn-secondary p-5 m-2">Quarterly Transactions</a>
-        <a href="#" class="btn btn-lg btn-dark p-5 m-2">Half Yearly Transactions</a>
-        <a href="#" class="btn btn-lg btn-danger p-5 m-2">Generate Transaction Statement</a>
+        <a href="#" class="btn btn-lg btn-primary p-5 m-2" data-toggle="modal" data-target="#monthly_txn_modal">Monthly Transactions</a>
+        <div class="modal fade" tabindex="-1" role="dialog" id="monthly_txn_modal">
+            <div class="modal-dialog" role="document">
+            <form action="{% url 'mbook:gen_month_txn' %}" method="POST">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Generate Monthly Transactions</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="month">Month</label>
+                            <select id="month" name="month" class="form-control">
+                                {% if current_month == 1 %}
+                                    <option value="1" selected>January</option>
+                                {% else %}
+                                    <option value="1">January</option>
+                                {% endif %}
+                                {% if current_month == 2 %}
+                                    <option value="2" selected>February</option>
+                                {% else %}
+                                    <option value="2">February</option>
+                                {% endif %}
+                                {% if current_month == 3 %}
+                                    <option value="3" selected>March</option>
+                                {% else %}
+                                    <option value="3">March</option>
+                                {% endif %}
+                                {% if current_month == 4 %}
+                                    <option value="4" selected>April</option>
+                                {% else %}
+                                    <option value="4">April</option>
+                                {% endif %}
+                                {% if current_month == 5 %}
+                                    <option value="5" selected>May</option>
+                                {% else %}
+                                    <option value="5">May</option>
+                                {% endif %}
+                                {% if current_month == 6 %}
+                                    <option value="6" selected>June</option>
+                                {% else %}
+                                    <option value="6">June</option>
+                                {% endif %}
+                                {% if current_month == 7 %}
+                                    <option value="7" selected>July</option>
+                                {% else %}
+                                    <option value="7">July</option>
+                                {% endif %}
+                                {% if current_month == 8 %}
+                                    <option value="8" selected>August</option>
+                                {% else %}
+                                    <option value="8">August</option>
+                                {% endif %}
+                                {% if current_month == 9 %}
+                                    <option value="9" selected>September</option>
+                                {% else %}
+                                    <option value="9">September</option>
+                                {% endif %}
+                                {% if current_month == 10 %}
+                                    <option value="10" selected>October</option>
+                                {% else %}
+                                    <option value="10">October</option>
+                                {% endif %}
+                                {% if current_month == 11 %}
+                                    <option value="11" selected>November</option>
+                                {% else %}
+                                    <option value="11">November</option>
+                                {% endif %}
+                                {% if current_month == 12 %}
+                                    <option value="12" selected>December</option>
+                                {% else %}
+                                    <option value="12">December</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="year">Year</label>
+                            <select id="year" name="year" class="form-control">
+                                <option value="{{current_year}}" selected>{{current_year}}</option>
+                                <option value="{{current_year_1}}">{{current_year_1}}</option>
+                                <option value="{{current_year_2}}">{{current_year_2}}</option>
+                            </select>
+                        </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Download PDF</a>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </form>
+            </div>
+        </div>
+        <a href="{% url 'mbook:gen_quarterly_txn' %}" class="btn btn-lg btn-secondary p-5 m-2">Quarterly Transactions</a>
+        <a href="{% url 'mbook:gen_sixm_txn' %}" class="btn btn-lg btn-dark p-5 m-2">Half Yearly Transactions</a>
+        <a href="#" class="btn btn-lg btn-danger p-5 m-2" data-toggle="modal" data-target="#gen_stmt_modal">Generate Transaction Statement</a>
+        <div class="modal fade" tabindex="-1" role="dialog" id="gen_stmt_modal">
+            <div class="modal-dialog" role="document">
+            <form action="#" method="POST">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Generate Transaction Statement</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="from_date">From Date</label>
+                            <input type="date" id="from_date" name="from_date" placeholder="YYYY-MM-DD" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="to_date">To Date</label>
+                            <input type="date" id="to_date" name="to_date" placeholder="YYYY-MM-DD" class="form-control" />
+                        </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Download PDF</a>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </form>
+            </div>
+        </div>
     </div>
 {% endblock body %}

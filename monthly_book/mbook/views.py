@@ -23,6 +23,17 @@ from .models import Stores, Products, Transactions
 from .forms import AddStoreForm, AddProductForm, AddTransactionForm, UserPasswordChangeForm
 
 
+# Global Variables
+unit_dict = {
+    'KGS': 'KG',
+    'LTR': 'L',
+    'GMS': 'gms',
+    'MIL': 'ml',
+    'PKT': 'P',
+    'PCS': 'Pcs.'
+}
+
+
 # Error Success function
 def view_error_success(request, args):
     error = ""
@@ -351,7 +362,8 @@ def update_txn(request, id):
                 'txn_qty':transaction.txn_qty,
                 'txn_unit':transaction.txn_unit,
                 'txn_amount':transaction.txn_amount,
-                'txn_ccy':transaction.txn_ccy
+                'txn_ccy':transaction.txn_ccy,
+                'txn_remarks':transaction.txn_remarks
             })
             args["transactions_form"] = transactions_form
             args["id"] = transaction.id
@@ -383,6 +395,8 @@ def update_txn(request, id):
                     transaction.txn_ccy = transactions_form.cleaned_data.get('txn_ccy')
                 if not transaction.txn_unit == transactions_form.cleaned_data.get('txn_unit'):
                     transaction.txn_unit = transactions_form.cleaned_data.get('txn_unit')
+                if not transaction.txn_remarks == transactions_form.cleaned_data.get('txn_remarks'):
+                    transaction.txn_remarks = transactions_form.cleaned_data.get('txn_remarks')
                 transaction.save()
                 request.session["success"] = "Transaction saved successfully!"
                 return redirect('mbook:transactions')
@@ -425,7 +439,7 @@ def delete_txn(request, id):
 @login_required
 def list_transactions(request):
     if request.user.is_authenticated:
-        transactions = Transactions.objects.all().order_by('-txn_dop')
+        transactions = Transactions.objects.all().order_by('-txn_dop', '-id')
         args = {}
         args["transactions"] = transactions
         add_txn_form = AddTransactionForm(initial={
@@ -442,6 +456,12 @@ def list_transactions(request):
 def reports(request):
     if request.user.is_authenticated:
         args = {}
+        current_month = date.today().month
+        current_year = date.today().year
+        args["current_month"] = current_month
+        args["current_year"] = current_year
+        args["current_year_1"] = current_year - 1
+        args["current_year_2"] = current_year - 2
         (request, args) = view_error_success(request, args)
         return render(request, "reports.html", args)
     else:
@@ -560,101 +580,303 @@ def generate_list_pdf(request):
 
 @login_required
 def gen_month_txn(request):
-    transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year).order_by('txn_dop')
-    buffer = BytesIO()
+    if request.method == "POST":
+        if request.POST["month"] and request.POST["year"]:
+            transactions = Transactions.objects.filter(txn_dop__month=request.POST["month"], txn_dop__year=request.POST["year"]).order_by('txn_dop')
+        else:
+            transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year).order_by('txn_dop')
+    else:
+        transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year).order_by('txn_dop')
+    
+    if len(transactions) > 0:
+        buffer = BytesIO()
 
-    pdf = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
+        pdf = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
 
-    elements = []    
+        elements = []    
 
-    tStyle = TableStyle([
-        ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
-        ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
-        ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
-        ('BACKGROUND', (0, 0), (-1, 0), colors.black),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP')
-    ])
+        tStyle = TableStyle([
+            ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
+            ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+            ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP')
+        ])
 
-    tStyle_colspan = TableStyle([
-        ('SPAN', (0, -1), (-1, -1)),
-    ])
+        tStyle_colspan = TableStyle([
+            ('SPAN', (0, -1), (-1, -1)),
+        ])
 
-    unit_dict = {
-            'KGS': 'KG',
-            'LTR': 'L',
-            'GMS': 'gms',
-            'MIL': 'ml',
-            'PKT': 'P',
-            'PCS': 'Pcs.'
-    }
+        styles = getSampleStyleSheet()
 
-    styles = getSampleStyleSheet()
-
-    txn_data = []
-    txn_count = len(transactions)
-    counter = 1
-    total_amount = 0.0
-    ccy = ""
-    if txn_count > 0:
-        for transaction in transactions:
-            if (counter - 1) == 0:
+        txn_data = []
+        txn_count = len(transactions)
+        counter = 1
+        total_amount = 0.0
+        ccy = ""
+        if txn_count > 0:
+            for transaction in transactions:
+                if (counter - 1) == 0:
+                    txn_data.append([
+                        "Sr. No.",
+                        "Purchase Date",
+                        "Purchased From",
+                        "Item",
+                        "Qty.",
+                        "Amount.",
+                    ])
                 txn_data.append([
-                    "Sr. No.",
-                    "Purchase Date",
-                    "Purchased From",
-                    "Item",
-                    "Qty.",
-                    "Amount.",
+                    f"{counter}.",
+                    f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
+                    f"{transaction.store.store_name}",
+                    Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
+                    f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
+                    "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
                 ])
+
+                total_amount += transaction.txn_amount
+                ccy = transaction.txn_ccy
+                counter += 1
+
+            total_amount = round(total_amount, 2)
             txn_data.append([
-                f"{counter}.",
-                f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
-                f"{transaction.store.store_name}",
-                Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
-                f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
-                "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
+                "",
+                "",
+                "",
+                "",
+                "Grand Total:",
+                "{} {:.2f}".format(ccy, total_amount)
+            ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns.setStyle(tStyle)
+            elements.append(txns)
+        else:
+            txn_data.append([
+                "Sr. No.",
+                "Purchase Date",
+                "Purchased From",
+                "Item",
+                "Qty.",
+                "Amount.",
             ])
 
-            total_amount += transaction.txn_amount
-            ccy = transaction.txn_ccy
-            counter += 1
+            txn_data.append(["No Transactions found to list."])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns.setStyle(tStyle)
+            txns.setStyle(tStyle_colspan)
+            elements.append(txns)
 
-        total_amount = round(total_amount, 2)
-        txn_data.append([
-            "",
-            "",
-            "",
-            "",
-            "Grand Total:",
-            "{} {:.2f}".format(ccy, total_amount)
-        ])
-        txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
-        txns.setStyle(tStyle)
-        elements.append(txns)
+
+        pdf.build(elements)
+        buffer.seek(0)
+        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+        return FileResponse(buffer, as_attachment=True, filename=filename)
     else:
-        txn_data.append([
-            "Sr. No.",
-            "Purchase Date",
-            "Purchased From",
-            "Item",
-            "Qty.",
-            "Amount.",
+        request.session["error"] = "No data found for selected Month / Year."
+        return redirect("mbook:reports")
+
+
+@login_required
+def gen_quarterly_txn(request):
+    end_date = date.today()
+    delta = timedelta(days=end_date.day + 60)
+    start_date = end_date - delta
+    if start_date.day != 1:
+        delta = timedelta(days=start_date.day)
+        start_date = start_date - delta
+
+    transactions = Transactions.objects.filter(txn_dop__range=[start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')]).order_by('txn_dop')
+    if len(transactions) > 0:
+        buffer = BytesIO()
+
+        pdf = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
+
+        elements = []    
+
+        tStyle = TableStyle([
+            ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
+            ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+            ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP')
         ])
 
-        txn_data.append(["No Transactions found to list."])
-        txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
-        txns.setStyle(tStyle)
-        txns.setStyle(tStyle_colspan)
-        elements.append(txns)
+        tStyle_colspan = TableStyle([
+            ('SPAN', (0, -1), (-1, -1)),
+        ])
+
+        styles = getSampleStyleSheet()
+
+        txn_data = []
+        txn_count = len(transactions)
+        counter = 1
+        total_amount = 0.0
+        ccy = ""
+        if txn_count > 0:
+            for transaction in transactions:
+                if (counter - 1) == 0:
+                    txn_data.append([
+                        "Sr. No.",
+                        "Purchase Date",
+                        "Purchased From",
+                        "Item",
+                        "Qty.",
+                        "Amount.",
+                    ])
+                txn_data.append([
+                    f"{counter}.",
+                    f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
+                    f"{transaction.store.store_name}",
+                    Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
+                    f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
+                    "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
+                ])
+
+                total_amount += transaction.txn_amount
+                ccy = transaction.txn_ccy
+                counter += 1
+
+            total_amount = round(total_amount, 2)
+            txn_data.append([
+                "",
+                "",
+                "",
+                "",
+                "Grand Total:",
+                "{} {:.2f}".format(ccy, total_amount)
+            ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns.setStyle(tStyle)
+            elements.append(txns)
+        else:
+            txn_data.append([
+                "Sr. No.",
+                "Purchase Date",
+                "Purchased From",
+                "Item",
+                "Qty.",
+                "Amount.",
+            ])
+
+            txn_data.append(["No Transactions found to list."])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns.setStyle(tStyle)
+            txns.setStyle(tStyle_colspan)
+            elements.append(txns)
 
 
-    pdf.build(elements)
-    buffer.seek(0)
-    filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
-    return FileResponse(buffer, as_attachment=True, filename=filename)
-        
+        pdf.build(elements)
+        buffer.seek(0)
+        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+        return FileResponse(buffer, as_attachment=True, filename=filename)
+    else:
+        request.session["error"] = "No data found for selected Month / Year."
+        return redirect("mbook:reports")
+
+
+@login_required
+def gen_sixm_txn(request):
+    end_date = date.today()
+    delta = timedelta(days=end_date.day + 150)
+    start_date = end_date - delta
+    if start_date.day != 1:
+        delta = timedelta(days=start_date.day)
+        start_date = start_date - delta
+
+    transactions = Transactions.objects.filter(txn_dop__range=[start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')]).order_by('txn_dop')
+    if len(transactions) > 0:
+        buffer = BytesIO()
+
+        pdf = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
+
+        elements = []    
+
+        tStyle = TableStyle([
+            ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
+            ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+            ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP')
+        ])
+
+        tStyle_colspan = TableStyle([
+            ('SPAN', (0, -1), (-1, -1)),
+        ])
+
+        styles = getSampleStyleSheet()
+
+        txn_data = []
+        txn_count = len(transactions)
+        counter = 1
+        total_amount = 0.0
+        ccy = ""
+        if txn_count > 0:
+            for transaction in transactions:
+                if (counter - 1) == 0:
+                    txn_data.append([
+                        "Sr. No.",
+                        "Purchase Date",
+                        "Purchased From",
+                        "Item",
+                        "Qty.",
+                        "Amount.",
+                    ])
+                txn_data.append([
+                    f"{counter}.",
+                    f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
+                    f"{transaction.store.store_name}",
+                    Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
+                    f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
+                    "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
+                ])
+
+                total_amount += transaction.txn_amount
+                ccy = transaction.txn_ccy
+                counter += 1
+
+            total_amount = round(total_amount, 2)
+            txn_data.append([
+                "",
+                "",
+                "",
+                "",
+                "Grand Total:",
+                "{} {:.2f}".format(ccy, total_amount)
+            ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns.setStyle(tStyle)
+            elements.append(txns)
+        else:
+            txn_data.append([
+                "Sr. No.",
+                "Purchase Date",
+                "Purchased From",
+                "Item",
+                "Qty.",
+                "Amount.",
+            ])
+
+            txn_data.append(["No Transactions found to list."])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns.setStyle(tStyle)
+            txns.setStyle(tStyle_colspan)
+            elements.append(txns)
+
+
+        pdf.build(elements)
+        buffer.seek(0)
+        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+        return FileResponse(buffer, as_attachment=True, filename=filename)
+    else:
+        request.session["error"] = "No data found for selected Month / Year."
+        return redirect("mbook:reports")
+
 
 @login_required
 def expense_charts(request):
@@ -871,7 +1093,6 @@ def expense_charts(request):
     args["m5_txns"] = m5_txns
 
     return render(request, "expense_charts.html", args)
-
 
 
 # User management views

@@ -186,9 +186,14 @@ class AddTransactionForm(forms.ModelForm):
         'class':'form-control',
     }), label="Product Currency")
 
+    txn_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={
+        'class':'form-control',
+        'placeholder': 'Any remarks for the transactions'
+    }), label="Remarks")
+
     class Meta:
         model = Transactions
-        fields = ('store', 'product', 'txn_product_code', 'txn_dop', 'txn_qty', 'txn_unit', 'txn_amount', 'txn_ccy')
+        fields = ('store', 'product', 'txn_product_code', 'txn_dop', 'txn_qty', 'txn_unit', 'txn_amount', 'txn_ccy', 'txn_remarks')
 
     def save(self, commit=True):
         txn = super(AddTransactionForm, self).save(commit=False)
