@@ -40,6 +40,7 @@ class Transactions(models.Model):
     txn_unit = models.CharField(max_length=16)
     txn_amount = models.FloatField()
     txn_ccy = models.CharField(max_length=3)
+    txn_remarks = models.TextField(default="")
 
     def __str__(self):
-        return "{}:{}:{}:{}:{}:{}:{}:{}:{}:{}".format(self.id, self.txn_timestamp, self.product, self.store, self.created_by, self.txn_dop, self.txn_qty, self.txn_unit, self.txn_amount, self.txn_ccy)
+        return "{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}".format(self.id, self.txn_timestamp, self.product, self.store, self.created_by, self.txn_dop, self.txn_qty, self.txn_unit, self.txn_amount, self.txn_ccy, self.txn_remarks)

@@ -26,4 +26,6 @@ urlpatterns = [
     path('generate_list_pdf/', views.generate_list_pdf, name="generate_list_pdf"),
     path('gen_month_txn/', views.gen_month_txn, name="gen_month_txn"),
     path('expense_charts/', views.expense_charts, name="expense_charts"),
+    path('gen_quarterly_txn/', views.gen_quarterly_txn, name="gen_quarterly_txn"),
+    path('gen_sixm_txn/', views.gen_sixm_txn, name="gen_sixm_txn"),
 ]

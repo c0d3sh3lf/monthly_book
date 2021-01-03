@@ -39,6 +39,7 @@ Expense Charts
             ['Household', {{household_spend}}],
             ['Essentials', {{essentials_spend}}],
             ['Veg / Fruits / Greens', {{vegetables_spend}}],
+            ['Dry Fruits', {{dryfruits_spend}}],
             ['Others', {{other_spend}}],
         ]); // data table array to come from python
         var cat_pie_options = {
@@ -71,15 +72,16 @@ Expense Charts
         last_six_data.addColumn('number', 'Household');
         last_six_data.addColumn('number', 'Essentials');
         last_six_data.addColumn('number', 'Veg / Fruits / Greens');
+        last_six_data.addColumn('number', 'Dry Fruits');
         last_six_data.addColumn('number', 'Others');
 
         last_six_data.addRows([
-            [new Date({{m0.year}}, {{m0.month}} - 1, 1, 0, 0), {{grocery_spend}}, {{cosmetic_spend}}, {{household_spend}}, {{essentials_spend}}, {{vegetables_spend}}, {{other_spend}}],
-            [new Date({{m1.year}}, {{m1.month}} - 1, 1, 0, 0), {{m1_txns.grocery_spend}}, {{m1_txns.cosmetic_spend}}, {{m1_txns.household_spend}}, {{m1_txns.essentials_spend}}, {{m1_txns.vegetables_spend}}, {{m1_txns.other_spend}}],
-            [new Date({{m2.year}}, {{m2.month}} - 1, 1, 0, 0), {{m2_txns.grocery_spend}}, {{m2_txns.cosmetic_spend}}, {{m2_txns.household_spend}}, {{m2_txns.essentials_spend}}, {{m2_txns.vegetables_spend}}, {{m2_txns.other_spend}}],
-            [new Date({{m3.year}}, {{m3.month}} - 1, 1, 0, 0), {{m3_txns.grocery_spend}}, {{m3_txns.cosmetic_spend}}, {{m3_txns.household_spend}}, {{m3_txns.essentials_spend}}, {{m3_txns.vegetables_spend}}, {{m3_txns.other_spend}}],
-            [new Date({{m4.year}}, {{m4.month}} - 1, 1, 0, 0), {{m4_txns.grocery_spend}}, {{m4_txns.cosmetic_spend}}, {{m4_txns.household_spend}}, {{m4_txns.essentials_spend}}, {{m4_txns.vegetables_spend}}, {{m4_txns.other_spend}}],
-            [new Date({{m5.year}}, {{m5.month}} - 1, 1, 0, 0), {{m5_txns.grocery_spend}}, {{m5_txns.cosmetic_spend}}, {{m5_txns.household_spend}}, {{m5_txns.essentials_spend}}, {{m5_txns.vegetables_spend}}, {{m5_txns.other_spend}}],
+            [new Date({{m0.year}}, {{m0.month}} - 1, 1, 0, 0), {{grocery_spend}}, {{cosmetic_spend}}, {{household_spend}}, {{essentials_spend}}, {{vegetables_spend}}, {{dryfruits_spend}}, {{other_spend}}],
+            [new Date({{m1.year}}, {{m1.month}} - 1, 1, 0, 0), {{m1_txns.grocery_spend}}, {{m1_txns.cosmetic_spend}}, {{m1_txns.household_spend}}, {{m1_txns.essentials_spend}}, {{m1_txns.vegetables_spend}}, {{m1_txns.dryfruits_spend}}, {{m1_txns.other_spend}}],
+            [new Date({{m2.year}}, {{m2.month}} - 1, 1, 0, 0), {{m2_txns.grocery_spend}}, {{m2_txns.cosmetic_spend}}, {{m2_txns.household_spend}}, {{m2_txns.essentials_spend}}, {{m2_txns.vegetables_spend}}, {{m2_txns.dryfruits_spend}}, {{m2_txns.other_spend}}],
+            [new Date({{m3.year}}, {{m3.month}} - 1, 1, 0, 0), {{m3_txns.grocery_spend}}, {{m3_txns.cosmetic_spend}}, {{m3_txns.household_spend}}, {{m3_txns.essentials_spend}}, {{m3_txns.vegetables_spend}}, {{m3_txns.dryfruits_spend}}, {{m3_txns.other_spend}}],
+            [new Date({{m4.year}}, {{m4.month}} - 1, 1, 0, 0), {{m4_txns.grocery_spend}}, {{m4_txns.cosmetic_spend}}, {{m4_txns.household_spend}}, {{m4_txns.essentials_spend}}, {{m4_txns.vegetables_spend}}, {{m4_txns.dryfruits_spend}}, {{m4_txns.other_spend}}],
+            [new Date({{m5.year}}, {{m5.month}} - 1, 1, 0, 0), {{m5_txns.grocery_spend}}, {{m5_txns.cosmetic_spend}}, {{m5_txns.household_spend}}, {{m5_txns.essentials_spend}}, {{m5_txns.vegetables_spend}}, {{m5_txns.dryfruits_spend}}, {{m5_txns.other_spend}}],
         ]);
 
         var last_six_options = {

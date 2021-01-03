@@ -72,6 +72,10 @@ Product - {{transaction.product.product_name}} - {{transaction.store.store_name}
                                             </td>
                                         </tr>
                                         <tr>
+                                            <td align="right"><b>Remarks:</b></td>
+                                            <td>{{transaction.txn_remarks}}</td>
+                                        </tr>
+                                        <tr>
                                             <td align="right"><b>Added By:</b></td>
                                             <td>{{transaction.created_by.last_name}}, {{transaction.created_by.first_name}}</td>
                                         </tr>
@@ -115,6 +119,8 @@ Product - {{transaction.product.product_name}} - {{transaction.store.store_name}
                                                             Essentials
                                                         {% elif transaction.product.product_type == "HLD" %}
                                                             Household
+                                                        {% elif transaction.product.product_type == "DRY" %}
+                                                            Dry Fruits
                                                         {% else %}
                                                             Others
                                                         {% endif %}    
