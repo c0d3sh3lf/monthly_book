@@ -2,7 +2,7 @@ asgiref==3.3.1
 Django==3.1.5
 django-session-timeout==0.1.0
 mysqlclient==2.0.3
-Pillow==8.0.1
+Pillow==8.1.0
 python-barcode==0.13.1
 python-dateutil==2.8.1
 pytz==2020.5
