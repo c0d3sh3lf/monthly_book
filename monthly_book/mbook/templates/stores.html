@@ -49,9 +49,9 @@
                             <td>{{ store.store_name }}</td>
                             <td>
                                 {% if store.store_type == "ONL" %}
-                                    <a href="{{ store.store_address }}" target="blank">{{ store.store_address }}</a>
+                                    <a href="{{ store.store_address }}" target="blank">{{ store.store_address|linebreaks }}</a>
                                 {% else %}
-                                    {{ store.store_address }}
+                                    {{ store.store_address|linebreaks }}
                                 {% endif %}    
                             </td>
                             <td>
