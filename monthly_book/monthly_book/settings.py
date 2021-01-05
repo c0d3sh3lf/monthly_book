@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'mbook',
+    'user_management',
     'sslserver',
     'django.contrib.admin',
     'django.contrib.auth',

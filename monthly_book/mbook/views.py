@@ -1,26 +1,24 @@
 # Django Imports
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.models import User
 from django.core.files import File
 from django.conf import settings
 from django.http import FileResponse
 
 # Core and 3rd Party Imports
 from datetime import date, datetime, timedelta
-from base64 import b64decode, b64encode
+# from base64 import b64decode, b64encode
 import barcode, os
 from barcode.writer import ImageWriter
 from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageBreak, Paragraph
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import inch, cm
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 
 # Application Imports
 from .models import Stores, Products, Transactions
-from .forms import AddStoreForm, AddProductForm, AddTransactionForm, UserPasswordChangeForm
+from .forms import AddStoreForm, AddProductForm, AddTransactionForm
 
 
 # Global Variables
@@ -1095,55 +1093,3 @@ def expense_charts(request):
     return render(request, "expense_charts.html", args)
 
 
-# User management views
-def user_login(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(username=username, password=password)
-        if user:
-            if user.is_active:
-                login(request, user)
-                return redirect('mbook:index')
-            else:
-                request.session['error'] = "User is inactive!"
-                return redirect("mbook:index")
-        else:
-            request.session['error'] = "Invalid Username / Password!"
-            return redirect("mbook:index")
-    else:
-        return redirect("mbook:index")
-
-
-def user_logout(request):
-    logout(request)
-    return redirect('mbook:index')
-
-
-@login_required
-def change_password(request):
-    user = request.user
-    if request.method == "POST":
-        form_password = UserPasswordChangeForm(user = user, data=request.POST)
-        print(form_password.errors)
-        if form_password.is_valid():
-            form_password.save()
-            request.session["success"] = "Password Changed Successfully."
-            logout(request)
-            return redirect("mbook:index")
-        else:
-            error = ""
-            if 'old_password' in form_password.errors:
-                error += form_password.errors['old_password'][0]
-            if 'new_password1' in form_password.errors:
-                error += form_password.errors['new_password1'][0]
-            if 'new_password2' in form_password.errors:
-                error += form_password.errors['new_password2'][0]
-            request.session["error"] = error
-            return redirect("mbook:change_password")
-    else:
-        form_password = UserPasswordChangeForm(user=user)
-        args = {}
-        args["form_password"] = form_password
-        (request, args) = view_error_success(request, args)
-        return render(request, "change_password.html", args)
