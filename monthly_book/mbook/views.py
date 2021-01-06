@@ -213,6 +213,7 @@ def update_product(request, id):
                 'product_code':product.product_code,
                 'product_rate_per_unit':product.product_rate_per_unit,
                 'product_ccy':product.product_ccy,
+                'product_type':product.product_type,
                 'product_is_extra':product.product_is_extra
             })
             args["products_form"] = products_form
