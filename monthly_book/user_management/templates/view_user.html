@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Expense Tracker - {{user.first_name}} {{user.last_name}}
+{% endblock title %}
+
+
+{% block body %}
+    <div class="container-fluid mt-3">
+        <h4 class="display-4">{{user.first_name}} {{ user.last_name }}</h4>
+        <hr />
+        <div class="container-fluid">
+            <div class="row">
+                <div class = "col-sm-6">
+                    <div class = "card">
+                        <div class = "card-header">Personal Details</div>
+                        <div class = "card-body">
+                            <p class = "card-text">
+                                <table class="table">
+                                    <tbody class="tbody">
+                                        <tr>
+                                            <td align="right"><b>Email:</b></td>
+                                            <td>{{user.email}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>User Category:</b></td>
+                                            <td>
+                                                {% if user.is_superuser %}
+                                                    Administrator - 
+                                                {% else %}
+                                                    Standard - 
+                                                {% endif %}
+                                                {% if user.is_staff %}
+                                                    Staff - 
+                                                {% else %}
+                                                    Guest - 
+                                                {% endif %}
+                                                {% if user.is_active %}
+                                                    Active
+                                                {% else %}
+                                                    Inactive
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+                    <div class = "col-sm-6">
+                    <div class = "card">
+                        <div class = "card-header">Profile Details</div>
+                        <div class = "card-body">
+                            <p class = "card-text">
+                                <table class="table">
+                                    <tbody class="table">
+                                        <tr>
+                                            <td align="right"><b>Date Joined:</b></td>
+                                            <td>{{user.date_joined}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td align="right"><b>Last Login:</b></td>
+                                            <td>{{user.last_login}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+            </div>
+        </div>
+        <div class="container-fluid pt-5">
+            <a href="{% url 'user_management:list_users' %}" class="btn btn-primary float-right"><i class="zmdi zmdi-arrow-left"></i> Back</a>
+        </div>
+    </div>
+{% endblock body %}

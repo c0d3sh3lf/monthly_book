@@ -29,7 +29,18 @@ def login_required(function):
     return wrapper
 
 
-# User management views
+# Superadmin Decorator
+def su_required(function):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            request.session["error"] = "You are not authorized to view this section. Please contact administrator."
+            return redirect("mbook:index")
+        else:
+            return function(request, *args, **kwargs)
+    return wrapper
+
+
+# User views
 def user_login(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -81,3 +92,36 @@ def change_password(request):
         args["form_password"] = form_password
         (request, args) = view_error_success(request, args)
         return render(request, "change_password.html", args)
+
+
+# Admin views
+@login_required
+@su_required
+def list_users(request):
+    all_users = User.objects.all()
+    args = {}
+    (request, args) = view_error_success(request, args)
+    args["all_users"] = all_users
+    return render(request, "list_users.html", args)
+
+
+@login_required
+@su_required
+def view_user(request, id):
+    user = User.objects.get(id=id)
+    args={}
+    (request, args) = view_error_success(request, args)
+    args["user"] = user
+    return render(request, "view_user.html", args)
+
+
+@login_required
+@su_required
+def delete_user(request, id):
+    if request.user.id != id:
+        User.objects.filter(id=id).delete()
+        request.session["success"] = "User deleted successfully!"
+        return redirect("user_management:list_users")
+    else:
+        request.session["error"] = "You are an administrator. You cannot delete yourself."
+        return redirect("user_management:list_users")
