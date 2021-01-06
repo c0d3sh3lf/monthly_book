@@ -107,6 +107,16 @@ def list_users(request):
 
 @login_required
 @su_required
+def view_user(request, id):
+    user = User.objects.get(id=id)
+    args={}
+    (request, args) = view_error_success(request, args)
+    args["user"] = user
+    return render(request, "view_user.html", args)
+
+
+@login_required
+@su_required
 def delete_user(request, id):
     if request.user.id != id:
         User.objects.filter(id=id).delete()

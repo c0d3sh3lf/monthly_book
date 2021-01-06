@@ -62,7 +62,7 @@ Expense Manager - User Management
                             {% endif %}
                         </td>
                         <td align="center">
-                            <a href="#" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View"><i class="zmdi zmdi-eye"></i></a>
+                            <a href="{% url 'user_management:view_user' user.id %}" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View"><i class="zmdi zmdi-eye"></i></a>
                             <a href="#" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit"><i class="zmdi zmdi-edit"></i></a>
                             <a href="#" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove"><i class="zmdi zmdi-delete"></i></a>
                         </td>
