@@ -103,3 +103,15 @@ def list_users(request):
     (request, args) = view_error_success(request, args)
     args["all_users"] = all_users
     return render(request, "list_users.html", args)
+
+
+@login_required
+@su_required
+def delete_user(request, id):
+    if request.user.id != id:
+        User.objects.filter(id=id).delete()
+        request.session["success"] = "User deleted successfully!"
+        return redirect("user_management:list_users")
+    else:
+        request.session["error"] = "You are an administrator. You cannot delete yourself."
+        return redirect("user_management:list_users")
