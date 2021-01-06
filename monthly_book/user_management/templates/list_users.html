@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Expense Manager - User Management
+{% endblock title %}
+
+{% block body %}
+    <div class="container-fluid mt-3">
+        <h4>User Management</h4>
+        <hr />
+        {% if error %}
+            <div class = "alert alert-danger alert-dismissible">
+                <button type = "button" class = "close" data-dismiss = "alert">&times;</button>
+                <strong>Error!</strong> {{error}}
+            </div>
+        {% endif %}
+        {% if success %}
+            <div class = "alert alert-success alert-dismissible">
+                <button type = "button" class = "close" data-dismiss = "alert">&times;</button>
+                <strong>Success!</strong> {{success}}
+            </div>
+        {% endif %}
+        <table class="table table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Name</th>
+                    <th>Email Address</th>
+                    <th>Username</th>
+                    <th>Active</th>
+                    <th>Administrator</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            {% for user in all_users %}
+                <tbody>
+                    <tr>
+                        <td align="right">{{ forloop.counter }}.</td>
+                        <td>{{ user.first_name }} {{ user.last_name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.username }}</td>
+                        <td align="center">
+                            {% if user.is_active %}
+                                Yes
+                            {% else %}
+                                No
+                            {% endif %}
+                        </td>
+                        <td align="center">
+                            {% if user.is_superuser %}
+                                Yes
+                            {% else %}
+                                No
+                            {% endif %}
+                        </td>
+                        <td align="center">
+                            {% if user.is_staff %}
+                                Staff
+                            {% else %}
+                                Guest
+                            {% endif %}
+                        </td>
+                        <td align="center">
+                            <a href="#" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View"><i class="zmdi zmdi-eye"></i></a>
+                            <a href="#" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit"><i class="zmdi zmdi-edit"></i></a>
+                            <a href="#" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove"><i class="zmdi zmdi-delete"></i></a>
+                        </td>
+                    </tr>
+                </tbody>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock body %}
