@@ -124,6 +124,41 @@ Product - {{product.product_name}}
         <div class="container-fluid pt-5">
             <a href="javascript:history.back()" class="btn btn-primary float-right"><i class="zmdi zmdi-arrow-left"></i> Back</a>
         </div>
+        <div class="container-fluid pt-5">
+            <table class="table table-striped" id="transactionTable">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Sr. No.</th>
+                        <th>Date of Purchase</th>
+                        <th>Store</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    {% if transactions %}
+                        {% for txn in transactions  %}
+                            <tr>
+                                <td align="right">{{ forloop.counter }}.</td>
+                                <td>{{ txn.txn_dop }}</td>
+                                <td>{{ txn.store }}</td>
+                                <td>{{ txn.txn_ccy }} {{ txn.txn_amount|floatformat:2 }}</td>
+                                <td align="right">
+                                    <a href="{% url 'mbook:view_txn' txn.id %}" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View Transaction Details"><i class="zmdi zmdi-eye"></i></a>
+                                    <a href="{% url 'mbook:update_txn' txn.id %}" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Edit Transaction Details"><i class="zmdi zmdi-edit"></i></a>
+                                    <a href="{% url 'mbook:delete_txn' txn.id %}" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Remove Transaction"><i class="zmdi zmdi-delete"></i></a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                            <tr>
+                                <td colspan="5">Product not purchased yet!</td>
+                            </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
 {% endblock body %}

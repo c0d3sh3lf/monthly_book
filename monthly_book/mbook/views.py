@@ -264,18 +264,17 @@ def update_product(request, id):
 
 @login_required
 def view_product(request, id):
-    if request.user.is_authenticated:
-        # try:
-        product = Products.objects.get(id=id)
-        args = {}
-        args["product"] = product
-        (request, args) = view_error_success(request, args)
-        return render(request, "view_product.html", args)
-        # except:
-        #     request.session["error"] = "Unable to find the product"
-        #     return redirect('mbook:products')
-    else:
-        return redirect('mbook:index')
+    # try:
+    product = Products.objects.get(id=id)
+    transactions = Transactions.objects.filter(product=product).order_by("-txn_dop")
+    args = {}
+    args["product"] = product
+    args["transactions"] = transactions
+    (request, args) = view_error_success(request, args)
+    return render(request, "view_product.html", args)
+    # except:
+    #     request.session["error"] = "Unable to find the product"
+    #     return redirect('mbook:products')
 
 
 @login_required
