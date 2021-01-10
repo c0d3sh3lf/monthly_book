@@ -80,6 +80,7 @@ def index(request):
         for extra_txn in total_extra_txn_month:
             total_extra_amt += extra_txn.txn_amount
         args["total_extra_amt"] = round(total_extra_amt, 2)
+        (request, args) = view_error_success(request, args)
         return render(request, "index.html", args)
     else:
         (request, args) = view_error_success(request, args)
