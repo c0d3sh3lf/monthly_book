@@ -571,7 +571,7 @@ def generate_list_pdf(request):
         p.build(elements)
         buffer.seek(0)
         gen_datetime = datetime.now()
-        filename = f"list_{gen_datetime.year}{gen_datetime.month}{gen_datetime.day}{gen_datetime.hour}{gen_datetime.minute}{gen_datetime.second}"
+        filename = f"list_{gen_datetime.year}{gen_datetime.month}{gen_datetime.day}{gen_datetime.hour}{gen_datetime.minute}{gen_datetime.second}.pdf"
         return FileResponse(buffer, as_attachment=True, filename=filename)
     else:
         return redirect("mbook:index")
@@ -670,7 +670,7 @@ def gen_month_txn(request):
 
         pdf.build(elements)
         buffer.seek(0)
-        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}.pdf"
         return FileResponse(buffer, as_attachment=True, filename=filename)
     else:
         request.session["error"] = "No data found for selected Month / Year."
@@ -770,7 +770,7 @@ def gen_quarterly_txn(request):
 
         pdf.build(elements)
         buffer.seek(0)
-        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}.pdf"
         return FileResponse(buffer, as_attachment=True, filename=filename)
     else:
         request.session["error"] = "No data found for selected Month / Year."
@@ -870,7 +870,7 @@ def gen_sixm_txn(request):
 
         pdf.build(elements)
         buffer.seek(0)
-        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+        filename = f"transactions_{datetime.now().year}{datetime.now().month}{datetime.now().day}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}.pdf"
         return FileResponse(buffer, as_attachment=True, filename=filename)
     else:
         request.session["error"] = "No data found for selected Month / Year."
