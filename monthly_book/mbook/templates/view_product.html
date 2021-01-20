@@ -131,6 +131,7 @@ Product - {{product.product_name}}
                         <th>Sr. No.</th>
                         <th>Date of Purchase</th>
                         <th>Store</th>
+                        <th>Qty.</th>
                         <th>Amount</th>
                         <th>Actions</th>
                     </tr>
@@ -143,6 +144,22 @@ Product - {{product.product_name}}
                                 <td align="right">{{ forloop.counter }}.</td>
                                 <td>{{ txn.txn_dop }}</td>
                                 <td>{{ txn.store }}</td>
+                                <td>
+                                    {{ txn.txn_qty }} 
+                                    {% if txn.txn_unit == "KGS" %}
+                                        Kgs
+                                    {% elif txn.txn_unit == "LTR" %}
+                                        L
+                                    {% elif txn.txn_unit == "GMS" %}
+                                        grams
+                                    {% elif txn.txn_unit == "MIL" %}
+                                        ml
+                                    {% elif txn.txn_unit == "PKT" %}
+                                        Packets
+                                    {% else %}
+                                        Pieces
+                                    {% endif %}
+                                </td>
                                 <td>{{ txn.txn_ccy }} {{ txn.txn_amount|floatformat:2 }}</td>
                                 <td align="right">
                                     <a href="{% url 'mbook:view_txn' txn.id %}" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="View Transaction Details"><i class="zmdi zmdi-eye"></i></a>
