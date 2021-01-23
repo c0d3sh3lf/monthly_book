@@ -630,7 +630,7 @@ def gen_month_txn(request):
                 txn_data.append([
                     f"{counter}.",
                     f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
-                    f"{transaction.store.store_name}",
+                    Paragraph(f"{transaction.store.store_name}", styles["Normal"]),
                     Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
                     "Y" if transaction.product.product_is_extra else "",
                     f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
@@ -734,7 +734,7 @@ def gen_quarterly_txn(request):
                 txn_data.append([
                     f"{counter}.",
                     f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
-                    f"{transaction.store.store_name}",
+                    Paragraph(f"{transaction.store.store_name}", styles["Normal"]),
                     Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
                     "Y" if transaction.product.product_is_extra else "",
                     f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
@@ -838,7 +838,7 @@ def gen_sixm_txn(request):
                 txn_data.append([
                     f"{counter}.",
                     f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
-                    f"{transaction.store.store_name}",
+                    Paragraph(f"{transaction.store.store_name}", styles["Normal"]),
                     Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
                     "Y" if transaction.product.product_is_extra else "",
                     f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
@@ -1104,5 +1104,3 @@ def expense_charts(request):
     args["m5_txns"] = m5_txns
 
     return render(request, "expense_charts.html", args)
-
-
