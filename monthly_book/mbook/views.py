@@ -595,8 +595,8 @@ def gen_month_txn(request):
         elements = []    
 
         tStyle = TableStyle([
-            ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
-            ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+            ('ALIGN', (6, 1), (6, -1), 'RIGHT'),
+            ('ALIGN', (5, -1), (5, -1), 'RIGHT'),
             ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.black),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -623,6 +623,7 @@ def gen_month_txn(request):
                         "Purchase Date",
                         "Purchased From",
                         "Item",
+                        "Extra",
                         "Qty.",
                         "Amount.",
                     ])
@@ -631,6 +632,7 @@ def gen_month_txn(request):
                     f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
                     f"{transaction.store.store_name}",
                     Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
+                    "Y" if transaction.product.product_is_extra else "",
                     f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
                     "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
                 ])
@@ -645,10 +647,11 @@ def gen_month_txn(request):
                 "",
                 "",
                 "",
+                "",
                 "Grand Total:",
                 "{} {:.2f}".format(ccy, total_amount)
             ])
-            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 2.55 * inch, 0.60 * inch, 0.60 * inch, 1.10 * inch ])
             txns.setStyle(tStyle)
             elements.append(txns)
         else:
@@ -657,12 +660,13 @@ def gen_month_txn(request):
                 "Purchase Date",
                 "Purchased From",
                 "Item",
+                "Extra?",
                 "Qty.",
                 "Amount.",
             ])
 
             txn_data.append(["No Transactions found to list."])
-            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 2.55 * inch, 0.60 * inch, 0.60 * inch, 1.10 * inch ])
             txns.setStyle(tStyle)
             txns.setStyle(tStyle_colspan)
             elements.append(txns)
@@ -695,8 +699,8 @@ def gen_quarterly_txn(request):
         elements = []    
 
         tStyle = TableStyle([
-            ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
-            ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+            ('ALIGN', (6, 1), (6, -1), 'RIGHT'),
+            ('ALIGN', (5, -1), (5, -1), 'RIGHT'),
             ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.black),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -723,6 +727,7 @@ def gen_quarterly_txn(request):
                         "Purchase Date",
                         "Purchased From",
                         "Item",
+                        "Extra?",
                         "Qty.",
                         "Amount.",
                     ])
@@ -731,6 +736,7 @@ def gen_quarterly_txn(request):
                     f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
                     f"{transaction.store.store_name}",
                     Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
+                    "Y" if transaction.product.product_is_extra else "",
                     f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
                     "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
                 ])
@@ -745,10 +751,11 @@ def gen_quarterly_txn(request):
                 "",
                 "",
                 "",
+                "",
                 "Grand Total:",
                 "{} {:.2f}".format(ccy, total_amount)
             ])
-            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 2.55 * inch, 0.60 * inch, 0.60 * inch, 1.10 * inch ])
             txns.setStyle(tStyle)
             elements.append(txns)
         else:
@@ -757,12 +764,13 @@ def gen_quarterly_txn(request):
                 "Purchase Date",
                 "Purchased From",
                 "Item",
+                "Extra?",
                 "Qty.",
                 "Amount.",
             ])
 
             txn_data.append(["No Transactions found to list."])
-            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 2.55 * inch, 0.60 * inch, 0.60 * inch, 1.10 * inch ])
             txns.setStyle(tStyle)
             txns.setStyle(tStyle_colspan)
             elements.append(txns)
@@ -795,8 +803,8 @@ def gen_sixm_txn(request):
         elements = []    
 
         tStyle = TableStyle([
-            ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
-            ('ALIGN', (4, -1), (4, -1), 'RIGHT'),
+            ('ALIGN', (6, 1), (6, -1), 'RIGHT'),
+            ('ALIGN', (5, -1), (5, -1), 'RIGHT'),
             ('ALIGN', (0, 1), (0, -1), 'RIGHT'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.black),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -823,6 +831,7 @@ def gen_sixm_txn(request):
                         "Purchase Date",
                         "Purchased From",
                         "Item",
+                        "Extra?",
                         "Qty.",
                         "Amount.",
                     ])
@@ -831,6 +840,7 @@ def gen_sixm_txn(request):
                     f"{(transaction.txn_dop).strftime('%b %d, %Y') }",
                     f"{transaction.store.store_name}",
                     Paragraph(f"{transaction.product.product_code} - {transaction.product.product_name}", styles["Normal"]),
+                    "Y" if transaction.product.product_is_extra else "",
                     f"{transaction.txn_qty} {unit_dict[transaction.txn_unit]}",
                     "{} {:.2f}".format(transaction.txn_ccy, round(transaction.txn_amount, 2)),
                 ])
@@ -845,10 +855,11 @@ def gen_sixm_txn(request):
                 "",
                 "",
                 "",
+                "",
                 "Grand Total:",
                 "{} {:.2f}".format(ccy, total_amount)
             ])
-            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 2.55 * inch, 0.60 * inch, 0.60 * inch, 1.10 * inch ])
             txns.setStyle(tStyle)
             elements.append(txns)
         else:
@@ -857,12 +868,13 @@ def gen_sixm_txn(request):
                 "Purchase Date",
                 "Purchased From",
                 "Item",
+                "Extra?",
                 "Qty.",
                 "Amount.",
             ])
 
             txn_data.append(["No Transactions found to list."])
-            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 3.25 * inch, 0.60 * inch, 1.10 * inch ])
+            txns = Table(txn_data, colWidths=[0.59 * inch, 1.08 * inch, 1.28 * inch, 2.55 * inch, 0.60 * inch, 0.60 * inch, 1.10 * inch ])
             txns.setStyle(tStyle)
             txns.setStyle(tStyle_colspan)
             elements.append(txns)
