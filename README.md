@@ -84,7 +84,7 @@ bash$ docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
 Once in a while, we update our code to fix certain bugs, or provide a new feature. You can update the code with following command.
 
 ```
-bash$ .\code_update.sh
+bash$ ./code_update.sh
 ```
 
 ## Backing up your database
