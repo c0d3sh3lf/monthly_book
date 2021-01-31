@@ -8,7 +8,7 @@ class Stores(models.Model):
     store_address = models.TextField()
     store_type = models.CharField(max_length=32)
     date_added = models.DateTimeField(default=timezone.now)
-    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user')
+    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
 
     def __str__(self):
         return f"{self.store_name}"
@@ -25,16 +25,16 @@ class Products(models.Model):
     product_type = models.CharField(max_length=3, null=True)
     product_barcode = models.ImageField(upload_to="images/", null=True, blank=True)
     date_added = models.DateTimeField(default=timezone.now)
-    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user')
+    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     
     def __str__(self):
         return f"{self.product_name} ({self.product_code})"
 
 class Transactions(models.Model):
     txn_timestamp = models.DateTimeField(default=timezone.now)
-    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user')
-    store = models.ForeignKey(Stores, on_delete=models.DO_NOTHING, related_name='store')
-    product = models.ForeignKey(Products, on_delete=models.DO_NOTHING, related_name='product')
+    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    store = models.ForeignKey(Stores, on_delete=models.DO_NOTHING)
+    product = models.ForeignKey(Products, on_delete=models.DO_NOTHING)
     txn_dop = models.DateField(default=timezone.now)
     txn_qty = models.FloatField()
     txn_unit = models.CharField(max_length=16)
