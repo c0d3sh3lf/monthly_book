@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.core.files import File
 from django.conf import settings
 from django.http import FileResponse
+from django.core.exceptions import ObjectDoesNotExist
 
 # Core and 3rd Party Imports
 from datetime import date, datetime, timedelta
@@ -64,18 +65,18 @@ def index(request):
     if request.user.is_authenticated:
         current_month = datetime.now().month
         current_year = datetime.now().year
-        stores_count = Stores.objects.all().count()
+        stores_count = Stores.objects.filter(created_by=request.user).count()
         args["stores"] = stores_count
-        products_count = Products.objects.all().count()
+        products_count = Products.objects.filter(created_by=request.user).count()
         args["products"] = products_count
-        transactions_count = Transactions.objects.all().count()
+        transactions_count = Transactions.objects.filter(created_by=request.user).count()
         args["transactions"] = transactions_count
-        total_txns_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year).all()
+        total_txns_month = Transactions.objects.filter(created_by=request.user, txn_dop__month=current_month, txn_dop__year=current_year).all()
         total_txn_amt = 0.0
         for txn in total_txns_month:
             total_txn_amt += txn.txn_amount
         args["total_txn_amt"] = round(total_txn_amt, 2)
-        total_extra_txn_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year, product__product_is_extra=True).all()
+        total_extra_txn_month = Transactions.objects.filter(created_by=request.user, txn_dop__month=current_month, txn_dop__year=current_year, product__product_is_extra=True).all()
         total_extra_amt = 0.0
         for extra_txn in total_extra_txn_month:
             total_extra_amt += extra_txn.txn_amount
@@ -90,7 +91,7 @@ def index(request):
 @login_required
 def list_stores(request):
     if request.user.is_authenticated:
-        stores = Stores.objects.all().order_by('store_name')
+        stores = Stores.objects.filter(created_by=request.user).order_by('store_name')
         args = {}
         args["stores"] = stores
         stores_form = AddStoreForm()
@@ -121,35 +122,39 @@ def add_store(request):
 @login_required
 def update_store(request, id):
     if request.user.is_authenticated:
-        store = Stores.objects.get(id=id)
-        if request.method == "GET":
-            args = {}
-            stores_form = AddStoreForm(initial={
-                'store_name':store.store_name,
-                'store_address':store.store_address,
-                'store_type':store.store_type
-            })
-            args["stores_form"] = stores_form
-            args["id"] = store.id
-            (request, args) = view_error_success(request, args)
-            return render(request, "edit_store.html", args)
-        elif request.method == "POST":
-            stores_form = AddStoreForm(request.POST, instance=store)
-            if stores_form.is_valid():
-                if not store.store_name == stores_form.cleaned_data.get('store_name'):
-                    store.store_name = stores_form.cleaned_data.get('store_name')
-                if not store.store_address == stores_form.cleaned_data.get('store_address'):
-                    store.store_address = stores_form.cleaned_data.get('store_address')
-                if not store.store_type == stores_form.cleaned_data.get('store_type'):
-                    store.store_type = stores_form.cleaned_data.get('store_type')
-                store.save()
-                request.session["success"] = "{} - Store saved successfully!".format(store.store_name)
-                return redirect('mbook:stores')
+        try:
+            store = Stores.objects.get(id=id, created_by=request.user)
+            if request.method == "GET":
+                args = {}
+                stores_form = AddStoreForm(initial={
+                    'store_name':store.store_name,
+                    'store_address':store.store_address,
+                    'store_type':store.store_type
+                })
+                args["stores_form"] = stores_form
+                args["id"] = store.id
+                (request, args) = view_error_success(request, args)
+                return render(request, "edit_store.html", args)
+            elif request.method == "POST":
+                stores_form = AddStoreForm(request.POST, instance=store)
+                if stores_form.is_valid():
+                    if not store.store_name == stores_form.cleaned_data.get('store_name'):
+                        store.store_name = stores_form.cleaned_data.get('store_name')
+                    if not store.store_address == stores_form.cleaned_data.get('store_address'):
+                        store.store_address = stores_form.cleaned_data.get('store_address')
+                    if not store.store_type == stores_form.cleaned_data.get('store_type'):
+                        store.store_type = stores_form.cleaned_data.get('store_type')
+                    store.save()
+                    request.session["success"] = "{} - Store saved successfully!".format(store.store_name)
+                    return redirect('mbook:stores')
+                else:
+                    request.session["error"] = stores_form.errors
+                    return redirect('mbook:stores')
             else:
-                request.session["error"] = stores_form.errors
-                return redirect('mbook:stores')
-        else:
-            request.session["error"] = "{} - Method not allowed".format(request.method)
+                request.session["error"] = "{} - Method not allowed".format(request.method)
+                return redirect('mbook:index')
+        except ObjectDoesNotExist:
+            request.session["error"] = "Store not found! Please check if you have proper authorization to access the store or if the store exists."
             return redirect('mbook:index')
     else:
         return redirect('mbook:index')
@@ -159,9 +164,12 @@ def update_store(request, id):
 def delete_store(request, id):
     if request.user.is_authenticated:
         try:
-            Stores.objects.filter(id=id).delete()
+            Stores.objects.filter(id=id, created_by=request.user).delete()
             request.session["success"] = "Store Deleted Successfully"
             return redirect('mbook:stores')
+        except ObjectDoesNotExist:
+            request.session["error"] = "Store not found! Please check if you have proper authorization to access the store or if the store exists."
+            return redirect('mbook:index')
         except:
             request.session["error"] = "Unable to delete the store"
             return redirect('mbook:stores')
@@ -172,7 +180,7 @@ def delete_store(request, id):
 @login_required
 def list_products(request):
     if request.user.is_authenticated:
-        products = Products.objects.all().order_by('product_name')
+        products = Products.objects.filter(created_by=request.user).order_by('product_name')
         args = {}
         args["products"] = products
         products_form = AddProductForm()
@@ -203,60 +211,64 @@ def add_product(request):
 @login_required
 def update_product(request, id):
     if request.user.is_authenticated:
-        product = Products.objects.get(id=id)
-        if request.method == "GET":
-            args = {}
-            products_form = AddProductForm(initial={
-                'product_name':product.product_name,
-                'product_desc':product.product_desc,
-                'product_qty':product.product_qty,
-                'product_unit':product.product_unit,
-                'product_code':product.product_code,
-                'product_rate_per_unit':product.product_rate_per_unit,
-                'product_ccy':product.product_ccy,
-                'product_type':product.product_type,
-                'product_is_extra':product.product_is_extra
-            })
-            args["products_form"] = products_form
-            args["id"] = product.id
-            (request, args) = view_error_success(request, args)
-            return render(request, "edit_product.html", args)
-        elif request.method == "POST":
-            products_form = AddProductForm(request.POST, instance=product)
-            if products_form.is_valid():
-                if not product.product_name == products_form.cleaned_data.get('product_name'):
-                    product.product_name = products_form.cleaned_data.get('product_name')
-                if not product.product_desc == products_form.cleaned_data.get('product_desc'):
-                    product.product_desc = products_form.cleaned_data.get('product_desc')
-                if not product.product_qty == products_form.cleaned_data.get('product_qty'):
-                    product.product_qty = products_form.cleaned_data.get('product_qty')
-                if not product.product_unit == products_form.cleaned_data.get('product_unit'):
-                    product.product_unit = products_form.cleaned_data.get('product_unit')
-                if not product.product_code == products_form.cleaned_data.get('product_code'):
+        try:
+            product = Products.objects.get(id=id, created_by=request.user)
+            if request.method == "GET":
+                args = {}
+                products_form = AddProductForm(initial={
+                    'product_name':product.product_name,
+                    'product_desc':product.product_desc,
+                    'product_qty':product.product_qty,
+                    'product_unit':product.product_unit,
+                    'product_code':product.product_code,
+                    'product_rate_per_unit':product.product_rate_per_unit,
+                    'product_ccy':product.product_ccy,
+                    'product_type':product.product_type,
+                    'product_is_extra':product.product_is_extra
+                })
+                args["products_form"] = products_form
+                args["id"] = product.id
+                (request, args) = view_error_success(request, args)
+                return render(request, "edit_product.html", args)
+            elif request.method == "POST":
+                products_form = AddProductForm(request.POST, instance=product)
+                if products_form.is_valid():
+                    if not product.product_name == products_form.cleaned_data.get('product_name'):
+                        product.product_name = products_form.cleaned_data.get('product_name')
+                    if not product.product_desc == products_form.cleaned_data.get('product_desc'):
+                        product.product_desc = products_form.cleaned_data.get('product_desc')
+                    if not product.product_qty == products_form.cleaned_data.get('product_qty'):
+                        product.product_qty = products_form.cleaned_data.get('product_qty')
+                    if not product.product_unit == products_form.cleaned_data.get('product_unit'):
+                        product.product_unit = products_form.cleaned_data.get('product_unit')
+                    if not product.product_code == products_form.cleaned_data.get('product_code'):
+                        product.product_code = products_form.cleaned_data.get('product_code')
+                    if not product.product_rate_per_unit == products_form.cleaned_data.get('product_rate_per_unit'):
+                        product.product_rate_per_unit = products_form.cleaned_data.get('product_rate_per_unit')
+                    if not product.product_ccy == products_form.cleaned_data.get('product_ccy'):
+                        product.product_ccy = products_form.cleaned_data.get('product_ccy')
+                    if not product.product_is_extra == products_form.cleaned_data.get('product_is_extra'):
+                        product.product_is_extra = products_form.cleaned_data.get('product_is_extra')
+                    # Refreshing Barcode Image
+                    if product.product_barcode or os.path.isfile(os.path.join(settings.MEDIA_ROOT, str(product.product_barcode))):
+                        product.product_barcode.delete(save=False)
                     product.product_code = products_form.cleaned_data.get('product_code')
-                if not product.product_rate_per_unit == products_form.cleaned_data.get('product_rate_per_unit'):
-                    product.product_rate_per_unit = products_form.cleaned_data.get('product_rate_per_unit')
-                if not product.product_ccy == products_form.cleaned_data.get('product_ccy'):
-                    product.product_ccy = products_form.cleaned_data.get('product_ccy')
-                if not product.product_is_extra == products_form.cleaned_data.get('product_is_extra'):
-                    product.product_is_extra = products_form.cleaned_data.get('product_is_extra')
-                # Refreshing Barcode Image
-                if product.product_barcode or os.path.isfile(os.path.join(settings.MEDIA_ROOT, str(product.product_barcode))):
-                    product.product_barcode.delete(save=False)
-                product.product_code = products_form.cleaned_data.get('product_code')
-                EAN = barcode.get_barcode_class('ean13')
-                product_barcode = EAN(product.product_code, writer=ImageWriter())
-                buffer = BytesIO()
-                product_barcode.write(buffer)
-                product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
-                product.save()
-                request.session["success"] = "{} - product saved successfully!".format(product.product_name)
-                return redirect('mbook:products')
+                    EAN = barcode.get_barcode_class('ean13')
+                    product_barcode = EAN(product.product_code, writer=ImageWriter())
+                    buffer = BytesIO()
+                    product_barcode.write(buffer)
+                    product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                    product.save()
+                    request.session["success"] = "{} - product saved successfully!".format(product.product_name)
+                    return redirect('mbook:products')
+                else:
+                    request.session["error"] = products_form.errors
+                    return redirect('mbook:products')
             else:
-                request.session["error"] = products_form.errors
-                return redirect('mbook:products')
-        else:
-            request.session["error"] = "{} - Method not allowed".format(request.method)
+                request.session["error"] = "{} - Method not allowed".format(request.method)
+                return redirect('mbook:index')
+        except ObjectDoesNotExist:
+            request.session["error"] = "Product not found! Please check if you have proper authorization to access the product or if the product exists."
             return redirect('mbook:index')
     else:
         return redirect('mbook:index')
@@ -264,26 +276,32 @@ def update_product(request, id):
 
 @login_required
 def view_product(request, id):
-    # try:
-    product = Products.objects.get(id=id)
-    transactions = Transactions.objects.filter(product=product).order_by("-txn_dop")
-    args = {}
-    args["product"] = product
-    args["transactions"] = transactions
-    (request, args) = view_error_success(request, args)
-    return render(request, "view_product.html", args)
-    # except:
-    #     request.session["error"] = "Unable to find the product"
-    #     return redirect('mbook:products')
+    try:
+        product = Products.objects.get(id=id, created_by=request.user)
+        transactions = Transactions.objects.filter(product=product).order_by("-txn_dop")
+        args = {}
+        args["product"] = product
+        args["transactions"] = transactions
+        (request, args) = view_error_success(request, args)
+        return render(request, "view_product.html", args)
+    except ObjectDoesNotExist:
+            request.session["error"] = "Product not found! Please check if you have proper authorization to access the product or if the product exists."
+            return redirect('mbook:index')
+    except:
+        request.session["error"] = "Unable to find the product"
+        return redirect('mbook:products')
 
 
 @login_required
 def delete_product(request, id):
     if request.user.is_authenticated:
         try:
-            Products.objects.filter(id=id).delete()
+            Products.objects.filter(id=id, created_by=request.user).delete()
             request.session["success"] = "Product Deleted Successfully"
             return redirect('mbook:products')
+        except ObjectDoesNotExist:
+            request.session["error"] = "Product not found! Please check if you have proper authorization to access the product or if the product exists."
+            return redirect('mbook:index')
         except:
             request.session["error"] = "Unable to delete the product"
             return redirect('mbook:products')
@@ -294,19 +312,23 @@ def delete_product(request, id):
 @login_required
 def add_txn_pr(request, id):
     if request.user.is_authenticated:
-        product = Products.objects.get(id=id)
-        add_txn_pr_form = AddTransactionForm(initial={'product':product,
-            'txn_product_code':product.product_code, 
-            'txn_dop':date.today(),
-            'txn_qty':product.product_qty,
-            'txn_unit':product.product_unit,
-            'txn_amount':product.product_rate_per_unit,
-            'txn_ccy':product.product_ccy
-            })
-        args = {}
-        args["add_txx_pr_form"] = add_txn_pr_form
-        (request, args) = view_error_success(request, args)
-        return render(request, "add_transaction.html", args)
+        try:
+            product = Products.objects.get(id=id, created_by=request.user)
+            add_txn_pr_form = AddTransactionForm(initial={'product':product,
+                'txn_product_code':product.product_code, 
+                'txn_dop':date.today(),
+                'txn_qty':product.product_qty,
+                'txn_unit':product.product_unit,
+                'txn_amount':product.product_rate_per_unit,
+                'txn_ccy':product.product_ccy
+                })
+            args = {}
+            args["add_txx_pr_form"] = add_txn_pr_form
+            (request, args) = view_error_success(request, args)
+            return render(request, "add_transaction.html", args)
+        except ObjectDoesNotExist:
+            request.session["error"] = "Product not found! Please check if you have proper authorization to access the product or the product exists."
+            return redirect('mbook:index')
     else:
         return redirect("mbook:index")
 
@@ -317,23 +339,34 @@ def add_txn(request, ref):
         if request.method == "POST":
             add_txn_pr_form = AddTransactionForm(request.POST)
             if add_txn_pr_form.is_valid():
+                store = add_txn_pr_form.cleaned_data.get('store')
+                if not store.created_by == request.user:
+                    request.session["error"] = "Store not found! Please check if you have proper authorization to access the store or if the store exists."
+                    return redirect('mbook:index')
                 product = add_txn_pr_form.cleaned_data.get('product')
-                if add_txn_pr_form.cleaned_data.get('txn_product_code') != product.product_code and add_txn_pr_form.cleaned_data.get('txn_product_code') not in ['', '0', '0000000000000']:
-                    product.product_code = add_txn_pr_form.cleaned_data.get('txn_product_code')
-                    EAN = barcode.get_barcode_class('ean13')
-                    product_barcode = EAN(product.product_code, writer=ImageWriter())
-                    buffer = BytesIO()
-                    product_barcode.write(buffer)
-                    product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
-                    product.save()
-                txn = add_txn_pr_form.save(commit=False)
-                txn.created_by = request.user
-                txn.save()
-                request.session["success"] = "Transaction Added Successfully."
-                if ref == "prt":
-                    return redirect("mbook:products")
+                if product.created_by == request.user:
+                    if add_txn_pr_form.cleaned_data.get('txn_product_code') != product.product_code and add_txn_pr_form.cleaned_data.get('txn_product_code') not in ['', '0', '0000000000000']:
+                        product.product_code = add_txn_pr_form.cleaned_data.get('txn_product_code')
+                        EAN = barcode.get_barcode_class('ean13')
+                        product_barcode = EAN(product.product_code, writer=ImageWriter())
+                        buffer = BytesIO()
+                        product_barcode.write(buffer)
+                        product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                        product.save()
+                    txn = add_txn_pr_form.save(commit=False)
+                    txn.created_by = request.user
+                    txn.save()
+                    request.session["success"] = "Transaction Added Successfully."
+                    if ref == "prt":
+                        return redirect("mbook:products")
+                    else:
+                        return redirect("mbook:transactions")
                 else:
-                    return redirect("mbook:transactions")
+                    request.session["error"] = "Product not found! Please check if you have proper authorization to access the product or the product exists."
+                    if ref == "prt":
+                        return redirect("mbook:products")
+                    else:
+                        return redirect("mbook:transactions")
             else:
                 request.session["error"] = "Unable to add the transaction."
                 if ref == "prt":
@@ -350,60 +383,72 @@ def add_txn(request, ref):
 @login_required
 def update_txn(request, id):
     if request.user.is_authenticated:
-        transaction = Transactions.objects.get(id=id)
-        if request.method == "GET":
-            args = {}
-            transactions_form = AddTransactionForm(initial={
-                'store':transaction.store,
-                'product':transaction.product,
-                'txn_product_code':transaction.product.product_code,
-                'txn_dop':transaction.txn_dop,
-                'txn_qty':transaction.txn_qty,
-                'txn_unit':transaction.txn_unit,
-                'txn_amount':transaction.txn_amount,
-                'txn_ccy':transaction.txn_ccy,
-                'txn_remarks':transaction.txn_remarks
-            })
-            args["transactions_form"] = transactions_form
-            args["id"] = transaction.id
-            (request, args) = view_error_success(request, args)
-            return render(request, "edit_transaction.html", args)
-        elif request.method == "POST":
-            transactions_form = AddTransactionForm(request.POST, instance=transaction)
-            if transactions_form.is_valid():
-                if not transaction.store == transactions_form.cleaned_data.get('store'):
-                    transaction.store = transactions_form.cleaned_data.get('store')
-                if not transaction.product == transactions_form.cleaned_data.get('product'):
-                    transaction.product = transactions_form.cleaned_data.get('product')
-                if not transaction.txn_dop == transactions_form.cleaned_data.get('txn_dop'):
-                    transaction.txn_dop = transactions_form.cleaned_data.get('txn_dop')
-                if not transaction.txn_qty == transactions_form.cleaned_data.get('txn_qty'):
-                    transaction.txn_qty = transactions_form.cleaned_data.get('txn_qty')
-                product = transactions_form.cleaned_data.get('product')
-                if transactions_form.cleaned_data.get('txn_product_code') != product.product_code and transactions_form.cleaned_data.get('txn_product_code') not in ['', '0', '0000000000000']:
-                    product.product_code = transactions_form.cleaned_data.get('txn_product_code')
-                    EAN = barcode.get_barcode_class('ean13')
-                    product_barcode = EAN(product.product_code, writer=ImageWriter())
-                    buffer = BytesIO()
-                    product_barcode.write(buffer)
-                    product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
-                    product.save()
-                if not transaction.txn_amount == transactions_form.cleaned_data.get('txn_amount'):
-                    transaction.txn_amount = transactions_form.cleaned_data.get('txn_amount')
-                if not transaction.txn_ccy == transactions_form.cleaned_data.get('txn_ccy'):
-                    transaction.txn_ccy = transactions_form.cleaned_data.get('txn_ccy')
-                if not transaction.txn_unit == transactions_form.cleaned_data.get('txn_unit'):
-                    transaction.txn_unit = transactions_form.cleaned_data.get('txn_unit')
-                if not transaction.txn_remarks == transactions_form.cleaned_data.get('txn_remarks'):
-                    transaction.txn_remarks = transactions_form.cleaned_data.get('txn_remarks')
-                transaction.save()
-                request.session["success"] = "Transaction saved successfully!"
-                return redirect('mbook:transactions')
+        try:
+            transaction = Transactions.objects.get(id=id, created_by=request.user)
+            if request.method == "GET":
+                args = {}
+                transactions_form = AddTransactionForm(initial={
+                    'store':transaction.store,
+                    'product':transaction.product,
+                    'txn_product_code':transaction.product.product_code,
+                    'txn_dop':transaction.txn_dop,
+                    'txn_qty':transaction.txn_qty,
+                    'txn_unit':transaction.txn_unit,
+                    'txn_amount':transaction.txn_amount,
+                    'txn_ccy':transaction.txn_ccy,
+                    'txn_remarks':transaction.txn_remarks
+                })
+                args["transactions_form"] = transactions_form
+                args["id"] = transaction.id
+                (request, args) = view_error_success(request, args)
+                return render(request, "edit_transaction.html", args)
+            elif request.method == "POST":
+                transactions_form = AddTransactionForm(request.POST, instance=transaction)
+                if transactions_form.is_valid():
+                    if not transaction.store == transactions_form.cleaned_data.get('store'):
+                        if transactions_form.cleaned_data.get('store').created_by == request.user:
+                            transaction.store = transactions_form.cleaned_data.get('store')
+                        else:
+                            request.session["error"] = "Store not found! Please check if you have proper authorization to access the store or if the store exists."
+                            return redirect('mbook:index')
+                    if not transaction.product == transactions_form.cleaned_data.get('product'):
+                        if transactions_form.cleaned_data.get('product').created_by == request.user:
+                            transaction.product = transactions_form.cleaned_data.get('product')
+                        else:
+                            request.session["error"] = "Product not found! Please check if you have proper authorization to access the product or if the product exists."
+                            return redirect('mbook:index')
+                    if not transaction.txn_dop == transactions_form.cleaned_data.get('txn_dop'):
+                        transaction.txn_dop = transactions_form.cleaned_data.get('txn_dop')
+                    if not transaction.txn_qty == transactions_form.cleaned_data.get('txn_qty'):
+                        transaction.txn_qty = transactions_form.cleaned_data.get('txn_qty')
+                    product = transactions_form.cleaned_data.get('product')
+                    if transactions_form.cleaned_data.get('txn_product_code') != product.product_code and transactions_form.cleaned_data.get('txn_product_code') not in ['', '0', '0000000000000']:
+                        product.product_code = transactions_form.cleaned_data.get('txn_product_code')
+                        EAN = barcode.get_barcode_class('ean13')
+                        product_barcode = EAN(product.product_code, writer=ImageWriter())
+                        buffer = BytesIO()
+                        product_barcode.write(buffer)
+                        product.product_barcode.save(f"{product.product_code}.png", File(buffer), save=False)
+                        product.save()
+                    if not transaction.txn_amount == transactions_form.cleaned_data.get('txn_amount'):
+                        transaction.txn_amount = transactions_form.cleaned_data.get('txn_amount')
+                    if not transaction.txn_ccy == transactions_form.cleaned_data.get('txn_ccy'):
+                        transaction.txn_ccy = transactions_form.cleaned_data.get('txn_ccy')
+                    if not transaction.txn_unit == transactions_form.cleaned_data.get('txn_unit'):
+                        transaction.txn_unit = transactions_form.cleaned_data.get('txn_unit')
+                    if not transaction.txn_remarks == transactions_form.cleaned_data.get('txn_remarks'):
+                        transaction.txn_remarks = transactions_form.cleaned_data.get('txn_remarks')
+                    transaction.save()
+                    request.session["success"] = "Transaction saved successfully!"
+                    return redirect('mbook:transactions')
+                else:
+                    request.session["error"] = transactions_form.errors
+                    return redirect('mbook:transactions')
             else:
-                request.session["error"] = transactions_form.errors
-                return redirect('mbook:transactions')
-        else:
-            request.session["error"] = "{} - Method not allowed".format(request.method)
+                request.session["error"] = "{} - Method not allowed".format(request.method)
+                return redirect('mbook:index')
+        except ObjectDoesNotExist:
+            request.session["error"] = "Transaction not found! Please check if you have proper authorization to access the transaction or if the transaction exists."
             return redirect('mbook:index')
     else:
         return redirect('mbook:index')
@@ -412,11 +457,15 @@ def update_txn(request, id):
 @login_required
 def view_txn(request, id):
     if request.user.is_authenticated:
-        transaction = Transactions.objects.get(id=id)
-        args = {}
-        args["transaction"] = transaction
-        (request, args) = view_error_success(request, args)
-        return render(request, "view_transaction.html", args)
+        try:
+            transaction = Transactions.objects.get(id=id, created_by=request.user)
+            args = {}
+            args["transaction"] = transaction
+            (request, args) = view_error_success(request, args)
+            return render(request, "view_transaction.html", args)
+        except ObjectDoesNotExist:
+            request.session["error"] = "Transaction not found! Please check if you have proper authorization to access the transaction or if the transaction exists."
+            return redirect('mbook:index')
     else:
         return redirect('mbook:index')
 
@@ -425,9 +474,12 @@ def view_txn(request, id):
 def delete_txn(request, id):
     if request.user.is_authenticated:
         try:
-            Transactions.objects.filter(id=id).delete()
+            Transactions.objects.filter(id=id, created_by=request.user).delete()
             request.session["success"] = "Transaction Deleted Successfully"
             return redirect('mbook:transactions')
+        except ObjectDoesNotExist:
+            request.session["error"] = "Transaction not found! Please check if you have proper authorization to access the transaction or if the transaction exists."
+            return redirect('mbook:index')
         except:
             request.session["error"] = "Unable to delete the product"
             return redirect('mbook:transactions')
@@ -438,7 +490,7 @@ def delete_txn(request, id):
 @login_required
 def list_transactions(request):
     if request.user.is_authenticated:
-        transactions = Transactions.objects.all().order_by('-txn_dop', '-id')
+        transactions = Transactions.objects.filter(created_by=request.user).order_by('-txn_dop', '-id')
         args = {}
         args["transactions"] = transactions
         add_txn_form = AddTransactionForm(initial={
@@ -493,8 +545,8 @@ def generate_list_pdf(request):
 
         # Creating grocery table
         g_data = []
-        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY"])
-        dryfruit_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["DRY"])
+        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY"], created_by=request.user)
+        dryfruit_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["DRY"], created_by=request.user)
         grocery_item_count = len(grocery_regular_items)
         dryfruit_item_count = len(dryfruit_regular_items)
         counter = 1
@@ -547,7 +599,7 @@ def generate_list_pdf(request):
         ]
 
         c_data = []
-        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"]).order_by('product_type')
+        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"], created_by=request.user).order_by('product_type')
         cosmetic_item_count = len(cosmetic_regular_items)
         counter = 1
         if cosmetic_item_count > 0:
@@ -581,11 +633,11 @@ def generate_list_pdf(request):
 def gen_month_txn(request):
     if request.method == "POST":
         if request.POST["month"] and request.POST["year"]:
-            transactions = Transactions.objects.filter(txn_dop__month=request.POST["month"], txn_dop__year=request.POST["year"]).order_by('txn_dop')
+            transactions = Transactions.objects.filter(txn_dop__month=request.POST["month"], txn_dop__year=request.POST["year"], created_by=request.user).order_by('txn_dop')
         else:
-            transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year).order_by('txn_dop')
+            transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year, created_by=request.user).order_by('txn_dop')
     else:
-        transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year).order_by('txn_dop')
+        transactions = Transactions.objects.filter(txn_dop__month=datetime.now().month, txn_dop__year=datetime.now().year, created_by=request.user).order_by('txn_dop')
     
     if len(transactions) > 0:
         buffer = BytesIO()
@@ -690,7 +742,7 @@ def gen_quarterly_txn(request):
         delta = timedelta(days=start_date.day)
         start_date = start_date - delta
 
-    transactions = Transactions.objects.filter(txn_dop__range=[start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')]).order_by('txn_dop')
+    transactions = Transactions.objects.filter(txn_dop__range=[start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')], created_by=request.user).order_by('txn_dop')
     if len(transactions) > 0:
         buffer = BytesIO()
 
@@ -794,7 +846,7 @@ def gen_sixm_txn(request):
         delta = timedelta(days=start_date.day)
         start_date = start_date - delta
 
-    transactions = Transactions.objects.filter(txn_dop__range=[start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')]).order_by('txn_dop')
+    transactions = Transactions.objects.filter(txn_dop__range=[start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')], created_by=request.user).order_by('txn_dop')
     if len(transactions) > 0:
         buffer = BytesIO()
 
@@ -894,7 +946,7 @@ def expense_charts(request):
     datetime_0 = datetime.now()
     current_month = datetime_0.month
     current_year = datetime_0.year
-    total_txns_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year).all()
+    total_txns_month = Transactions.objects.filter(txn_dop__month=current_month, txn_dop__year=current_year, created_by=request.user).all()
     grocery_spend = 0.0
     cosmetic_spend = 0.0
     household_spend = 0.0
@@ -941,7 +993,7 @@ def expense_charts(request):
     datetime_1 = datetime.now() - delta
     current_month_1 = datetime_1.month
     current_year_1 = datetime_1.year
-    m_1_txns = Transactions.objects.filter(txn_dop__month=current_month_1, txn_dop__year=current_year_1).all()
+    m_1_txns = Transactions.objects.filter(txn_dop__month=current_month_1, txn_dop__year=current_year_1, created_by=request.user).all()
     m1_txns = {
         'grocery_spend': 0.0,
         'cosmetic_spend':0.0,
@@ -974,7 +1026,7 @@ def expense_charts(request):
     datetime_2 = datetime.now() - delta
     current_month_2 = datetime_2.month
     current_year_2 = datetime_2.year
-    m_2_txns = Transactions.objects.filter(txn_dop__month=current_month_2, txn_dop__year=current_year_2).all()
+    m_2_txns = Transactions.objects.filter(txn_dop__month=current_month_2, txn_dop__year=current_year_2, created_by=request.user).all()
     m2_txns = {
         'grocery_spend': 0.0,
         'cosmetic_spend':0.0,
@@ -1007,7 +1059,7 @@ def expense_charts(request):
     datetime_3 = datetime.now() - delta
     current_month_3 = datetime_3.month
     current_year_3 = datetime_3.year
-    m_3_txns = Transactions.objects.filter(txn_dop__month=current_month_3, txn_dop__year=current_year_3).all()
+    m_3_txns = Transactions.objects.filter(txn_dop__month=current_month_3, txn_dop__year=current_year_3, created_by=request.user).all()
     m3_txns = {
         'grocery_spend': 0.0,
         'cosmetic_spend':0.0,
@@ -1041,7 +1093,7 @@ def expense_charts(request):
     datetime_4 = datetime.now() - delta
     current_month_4 = datetime_4.month
     current_year_4 = datetime_4.year
-    m_4_txns = Transactions.objects.filter(txn_dop__month=current_month_4, txn_dop__year=current_year_4).all()
+    m_4_txns = Transactions.objects.filter(txn_dop__month=current_month_4, txn_dop__year=current_year_4, created_by=request.user).all()
     m4_txns = {
         'grocery_spend': 0.0,
         'cosmetic_spend':0.0,
@@ -1075,7 +1127,7 @@ def expense_charts(request):
     datetime_5 = datetime.now() - delta
     current_month_5 = datetime_5.month
     current_year_5 = datetime_5.year
-    m_5_txns = Transactions.objects.filter(txn_dop__month=current_month_5, txn_dop__year=current_year_5).all()
+    m_5_txns = Transactions.objects.filter(txn_dop__month=current_month_5, txn_dop__year=current_year_5, created_by=request.user).all()
     m5_txns = {
         'grocery_spend': 0.0,
         'cosmetic_spend':0.0,
