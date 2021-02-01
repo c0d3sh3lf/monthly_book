@@ -1149,7 +1149,7 @@ def expense_charts(request):
         if txn.product.product_type == "VLF":
             m5_txns['vegetables_spend'] += txn.txn_amount
         if txn.product.product_type == "DRY":
-            m_txns['dryfruits_spend'] += txn.txn_amount
+            m5_txns['dryfruits_spend'] += txn.txn_amount
         if txn.product.product_type == "OTH":
             m5_txns['other_spend'] += txn.txn_amount
     args["m5"] = datetime_5
