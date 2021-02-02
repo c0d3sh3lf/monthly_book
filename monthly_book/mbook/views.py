@@ -522,9 +522,9 @@ def reports(request):
 @login_required
 def generate_list_pdf(request):
     if request.method == "GET":
-        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY"], created_by=request.user)
-        dryfruit_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["DRY"], created_by=request.user)
-        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"], created_by=request.user).order_by('product_type')
+        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY"], created_by=request.user).order_by('product_name')
+        dryfruit_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["DRY"], created_by=request.user).order_by('product_name')
+        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"], created_by=request.user).order_by('product_type').order_by('product_name')
         args = {}
         args["grocery_regular_items"] = grocery_regular_items
         args["dryfruit_regular_items"] = dryfruit_regular_items
