@@ -1,0 +1,175 @@
+{% extends "base.html" %} 
+
+{% block title %} 
+Generate Monthly List 
+{% endblock title %} 
+
+{% block body %}
+<div class="container-fluid">
+  <form action="{% url 'mbook:generate_list_pdf' %}" method="POST">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+  <div class="row">
+    <div class="col-6">
+      <h2 class="display-4">Grocery</h2>
+        <table class="table-striped">
+          <thead>
+            <tr>
+              <th>Sr. No.</th>
+              <th>Item</th>
+              <th>Qty.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for grocery_item in grocery_regular_items %}
+              <tr>
+                <td>{{forloop.counter}}</td>
+                <td>
+                <label class="form-check-label">
+                  <input
+                    type="checkbox"
+                    name="grocery_{{grocery_item.id}}"
+                    class="form-check-input"
+                    value="{{grocery_item.id}}"
+                  />{{grocery_item.product_name}}
+                </label>
+                </td>
+                <td>
+                  <div class="input-group">
+                    <input type="text" value="{{grocery_item.product_qty}}" name="gunit_{{grocery_item.id}}" class="form-control" aria-describedby="gunit_desc_{{grocery_item.id}}"/>
+                    <div class="input-group-append">
+                      <span class="input-group-text" id="gunit_desc_{{grocery_item.id}}">
+                        {% if grocery_item.product_unit == "KGS" %}
+                            Kgs
+                        {% elif grocery_item.product_unit == "LTR" %}
+                            L
+                        {% elif grocery_item.product_unit == "GMS" %}
+                            grams
+                        {% elif grocery_item.product_unit == "MIL" %}
+                            ml
+                        {% elif grocery_item.product_unit == "PKT" %}
+                            Packets
+                        {% else %}
+                            Pieces
+                        {% endif %}
+                      </span>
+                    <div>
+                  <div>
+                </td>
+              </tr>
+            {% endfor %}
+          <tbody>
+        </table>
+    </div>
+    <div class="col-6">
+      <div class="row">
+        <div class="col-12">
+          <h2 class="display-4">Dry Fruits</h2>
+          <table class="table-striped">
+            <thead>
+              <tr>
+                <th>Sr. No.</th>
+                <th>Item</th>
+                <th>Qty.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for dryfruit_item in dryfruit_regular_items %}
+                <tr>
+                  <td>{{forloop.counter}}</td>
+                  <td>
+                  <label class="form-check-label">
+                    <input
+                      type="checkbox"
+                      name="dryfruit_{{dryfruit_item.id}}"
+                      class="form-check-input"
+                      value="{{dryfruit_item.id}}"
+                    />{{dryfruit_item.product_name}}
+                  </label>
+                  </td>
+                  <td>
+                    <div class="input-group">
+                      <input type="text" value="{{dryfruit_item.product_qty}}" name="dunit_{{dryfruit_item.id}}" class="form-control" aria-describedby="dunit_desc_{{dryfruit_item.id}}"/>
+                      <div class="input-group-append">
+                        <span class="input-group-text" id="dunit_desc_{{dryfruit_item.id}}">
+                          {% if dryfruit_item.product_unit == "KGS" %}
+                              Kgs
+                          {% elif dryfruit_item.product_unit == "LTR" %}
+                              L
+                          {% elif dryfruit_item.product_unit == "GMS" %}
+                              grams
+                          {% elif dryfruit_item.product_unit == "MIL" %}
+                              ml
+                          {% elif dryfruit_item.product_unit == "PKT" %}
+                              Packets
+                          {% else %}
+                              Pieces
+                          {% endif %}
+                        </span>
+                      <div>
+                    <div>
+                  </td>
+                </tr>
+              {% endfor %}
+            <tbody>
+          </table>
+        </div>
+      <div>
+      <div class="row pt-5">
+        <div class="col-12">
+          <h2 class="display-4">Cosmetics</h2>
+          <table class="table-striped">
+            <thead>
+              <tr>
+                <th>Sr. No.</th>
+                <th>Item</th>
+                <th>Qty.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cosmetic_item in cosmetic_regular_items %}
+                <tr>
+                  <td>{{forloop.counter}}</td>
+                  <td>
+                  <label class="form-check-label">
+                    <input
+                      type="checkbox"
+                      name="cosmetic_{{cosmetic_item.id}}"
+                      class="form-check-input"
+                      value="{{cosmetic_item.id}}"
+                    />{{cosmetic_item.product_name}}
+                  </label>
+                  </td>
+                  <td>
+                    <div class="input-group">
+                      <input type="text" value="{{cosmetic_item.product_qty}}" name="cunit_{{cosmetic_item.id}}" class="form-control" aria-describedby="cunit_desc_{{cosmetic_item.id}}"/>
+                      <div class="input-group-append">
+                        <span class="input-group-text" id="cunit_desc_{{cosmetic_item.id}}">
+                          {% if cosmetic_item.product_unit == "KGS" %}
+                              Kgs
+                          {% elif cosmetic_item.product_unit == "LTR" %}
+                              L
+                          {% elif cosmetic_item.product_unit == "GMS" %}
+                              grams
+                          {% elif cosmetic_item.product_unit == "MIL" %}
+                              ml
+                          {% elif cosmetic_item.product_unit == "PKT" %}
+                              Packets
+                          {% else %}
+                              Pieces
+                          {% endif %}
+                        </span>
+                      <div>
+                    <div>
+                  </td>
+                </tr>
+              {% endfor %}
+            <tbody>
+          </table>
+        </div>
+      <div>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary mt-5">Generate PDF</button>
+  </form>
+</div>
+{% endblock body %}
