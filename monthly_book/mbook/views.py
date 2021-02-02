@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 # Core and 3rd Party Imports
 from datetime import date, datetime, timedelta
 # from base64 import b64decode, b64encode
-import barcode, os
+import barcode, os, re
 from barcode.writer import ImageWriter
 from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape
@@ -521,7 +521,44 @@ def reports(request):
 
 @login_required
 def generate_list_pdf(request):
-    if request.user.is_authenticated:
+    if request.method == "GET":
+        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY"], created_by=request.user)
+        dryfruit_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["DRY"], created_by=request.user)
+        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"], created_by=request.user).order_by('product_type')
+        args = {}
+        args["grocery_regular_items"] = grocery_regular_items
+        args["dryfruit_regular_items"] = dryfruit_regular_items
+        args["cosmetic_regular_items"] = cosmetic_regular_items
+        (request, args) = view_error_success(request, args)
+        return render(request, "gen_list.html", args)
+    elif request.method == "POST":
+        list_elements = request.POST
+        grocery_ids = []
+        dry_fruit_ids = []
+        cosmetic_ids = []
+
+        grocery_qty = {}
+        dry_fruit_qty = {}
+        cosmetic_qty = {}
+
+        grocery_re = re.compile("^grocery")
+        dry_fruit_re = re.compile("^dry")
+        cosmetic_re = re.compile("^cosmetic")
+
+        for checkbox_name in list_elements.keys():
+            if grocery_re.search(checkbox_name):
+                grocery_ids.append(int(request.POST[checkbox_name]))
+                grocery_qty[int(request.POST[checkbox_name])] = float(request.POST[f"gunit_{request.POST[checkbox_name]}"])
+            if dry_fruit_re.search(checkbox_name):
+                dry_fruit_ids.append(int(request.POST[checkbox_name]))
+                dry_fruit_qty[int(request.POST[checkbox_name])] = float(request.POST[f"dunit_{request.POST[checkbox_name]}"])
+            if cosmetic_re.search(checkbox_name):
+                cosmetic_ids.append(int(request.POST[checkbox_name]))
+                cosmetic_qty[int(request.POST[checkbox_name])] = float(request.POST[f"cunit_{request.POST[checkbox_name]}"])
+        grocery_regular_items = Products.objects.filter(id__in=grocery_ids, created_by=request.user)
+        dryfruit_regular_items = Products.objects.filter(id__in=dry_fruit_ids, created_by=request.user)
+        cosmetic_regular_items = Products.objects.filter(id__in=cosmetic_ids, created_by=request.user).order_by('product_type')
+
         buffer = BytesIO()
         elements = []
         p = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=0.25*inch, rightMargin=0.25*inch, topMargin=0.25*inch, bottomMargin=0.25*inch)
@@ -545,8 +582,8 @@ def generate_list_pdf(request):
 
         # Creating grocery table
         g_data = []
-        grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY"], created_by=request.user)
-        dryfruit_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["DRY"], created_by=request.user)
+        # grocery_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["GRY"], created_by=request.user)
+        # dryfruit_regular_items = Products.objects.filter(product_is_extra=False, product_type__in=["DRY"], created_by=request.user)
         grocery_item_count = len(grocery_regular_items)
         dryfruit_item_count = len(dryfruit_regular_items)
         counter = 1
@@ -558,9 +595,9 @@ def generate_list_pdf(request):
                         g_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
                         g_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
                 try:
-                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", f"{counter + int(grocery_item_count/2) + (grocery_item_count % 2 > 0)}", "", "", f"{grocery_regular_items[grocery_counter + 1].product_name}", f"{grocery_regular_items[grocery_counter + 1].product_qty} {unit_dict[grocery_regular_items[grocery_counter + 1].product_unit]}"])
+                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_qty[grocery_regular_items[grocery_counter].id]} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", f"{counter + int(grocery_item_count/2) + (grocery_item_count % 2 > 0)}", "", "", f"{grocery_regular_items[grocery_counter + 1].product_name}", f"{grocery_qty[grocery_regular_items[grocery_counter + 1].id]} {unit_dict[grocery_regular_items[grocery_counter + 1].product_unit]}"])
                 except IndexError:
-                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_regular_items[grocery_counter].product_qty} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", "", "", "", "", ""])
+                    g_data.append([f"{counter}", "", "", f"{grocery_regular_items[grocery_counter].product_name}", f"{grocery_qty[grocery_regular_items[grocery_counter].id]} {unit_dict[grocery_regular_items[grocery_counter].product_unit]}", "", "", "", "", "", ""])
                 counter += 1
             
             d_counter = 1
@@ -577,9 +614,9 @@ def generate_list_pdf(request):
                         g_table_style_data.append(('BACKGROUND', (0, counter + 1), (-1, counter + 1), colors.black))
                         g_table_style_data.append(('TEXTCOLOR', (0, counter + 1), (-1, counter + 1), colors.white))
                 try:
-                    g_data.append([f"{d_counter}", "", "", f"{dryfruit_regular_items[dryfruit_counter].product_name}", f"{dryfruit_regular_items[dryfruit_counter].product_qty} {unit_dict[dryfruit_regular_items[dryfruit_counter].product_unit]}", "", f"{d_counter + int(dryfruit_item_count/2) + (dryfruit_item_count % 2 > 0)}", "", "", f"{dryfruit_regular_items[dryfruit_counter + 1].product_name}", f"{dryfruit_regular_items[dryfruit_counter + 1].product_qty} {unit_dict[dryfruit_regular_items[dryfruit_counter + 1].product_unit]}"])
+                    g_data.append([f"{d_counter}", "", "", f"{dryfruit_regular_items[dryfruit_counter].product_name}", f"{dry_fruit_qty[dryfruit_regular_items[dryfruit_counter].id]} {unit_dict[dryfruit_regular_items[dryfruit_counter].product_unit]}", "", f"{d_counter + int(dryfruit_item_count/2) + (dryfruit_item_count % 2 > 0)}", "", "", f"{dryfruit_regular_items[dryfruit_counter + 1].product_name}", f"{dry_fruit_qty[dryfruit_regular_items[dryfruit_counter + 1].id]} {unit_dict[dryfruit_regular_items[dryfruit_counter + 1].product_unit]}"])
                 except IndexError:
-                    g_data.append([f"{d_counter}", "", "", f"{dryfruit_regular_items[dryfruit_counter].product_name}", f"{dryfruit_regular_items[dryfruit_counter].product_qty} {unit_dict[dryfruit_regular_items[dryfruit_counter].product_unit]}", "", "", "", "", "", ""])
+                    g_data.append([f"{d_counter}", "", "", f"{dryfruit_regular_items[dryfruit_counter].product_name}", f"{dry_fruit_qty[dryfruit_regular_items[dryfruit_counter].id]} {unit_dict[dryfruit_regular_items[dryfruit_counter].product_unit]}", "", "", "", "", "", ""])
                 counter += 1
                 d_counter += 1
             
@@ -599,7 +636,7 @@ def generate_list_pdf(request):
         ]
 
         c_data = []
-        cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"], created_by=request.user).order_by('product_type')
+        # cosmetic_regular_items = Products.objects.filter(product_is_extra=False, product_type__in = ["CSM", "HLD"], created_by=request.user).order_by('product_type')
         cosmetic_item_count = len(cosmetic_regular_items)
         counter = 1
         if cosmetic_item_count > 0:
@@ -610,9 +647,9 @@ def generate_list_pdf(request):
                         c_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
                         c_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
                 try:
-                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", f"{counter + int(cosmetic_item_count/2) + (cosmetic_item_count % 2 > 0)}", "", "", f"{cosmetic_regular_items[cosmetic_counter + 1].product_name}", f"{cosmetic_regular_items[cosmetic_counter + 1].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter + 1].product_unit]}"])
+                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_qty[cosmetic_regular_items[cosmetic_counter].id]} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", f"{counter + int(cosmetic_item_count/2) + (cosmetic_item_count % 2 > 0)}", "", "", f"{cosmetic_regular_items[cosmetic_counter + 1].product_name}", f"{cosmetic_qty[cosmetic_regular_items[cosmetic_counter + 1].id]} {unit_dict[cosmetic_regular_items[cosmetic_counter + 1].product_unit]}"])
                 except IndexError:
-                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_regular_items[cosmetic_counter].product_qty} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", "", "", "", "", ""])
+                    c_data.append([f"{counter}", "", "", f"{cosmetic_regular_items[cosmetic_counter].product_name}", f"{cosmetic_qty[cosmetic_regular_items[cosmetic_counter].id]} {unit_dict[cosmetic_regular_items[cosmetic_counter].product_unit]}", "", "", "", "", "", ""])
                 counter += 1
             c_table = Table(c_data)
             c_tStyle = TableStyle(c_table_style_data)
@@ -626,6 +663,7 @@ def generate_list_pdf(request):
         filename = f"list_{gen_datetime.year}{gen_datetime.month}{gen_datetime.day}{gen_datetime.hour}{gen_datetime.minute}{gen_datetime.second}.pdf"
         return FileResponse(buffer, as_attachment=True, filename=filename)
     else:
+        request.session["error"] = "HTTP Method '{}' is not allowed.".format(request.method)
         return redirect("mbook:index")
 
 
