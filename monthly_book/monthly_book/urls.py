@@ -18,8 +18,12 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+api_base_url = "api/v1/"
+
 urlpatterns = [
     path('', include(('mbook.urls', 'mbook'), namespace='mbook')),
     path('umanage/', include(('user_management.urls', 'user_management'), namespace='user_management')),
+    path(api_base_url, include(('mbook.api_urls', 'mbook_api'), namespace='mbook_api')),
+    path(api_base_url + 'umanage/', include(('user_management.api_urls', 'user_management_api'), namespace='user_management_api')),
     path('admin/', admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
