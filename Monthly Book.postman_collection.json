@@ -41,7 +41,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\":\"sam\",\n    \"password\":\"$@mdgrr8\"\n}",
+							"raw": "{\n    \"username\":\"{{username}}\",\n    \"password\":\"{{password}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -153,6 +153,30 @@
 					},
 					"response": []
 				}
+			],
+			"description": "This section of the collection deals with all the APIs related to the user management such as new user registration, user login, verifying user's token, refreshing user's token and user logout.",
+			"auth": {
+				"type": "noauth"
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
 			]
 		},
 		{
@@ -174,7 +198,8 @@
 								"v1",
 								""
 							]
-						}
+						},
+						"description": "List all the available API urls. This is created by DefaultRouter in Django Rest Framework."
 					},
 					"response": []
 				},
@@ -195,7 +220,8 @@
 								"stores",
 								""
 							]
-						}
+						},
+						"description": "This API will list all the available stores created by the user. The API will also validate the access token provided in the authorization header and then provide the details related to the user who has requested the details."
 					},
 					"response": []
 				},
@@ -217,7 +243,8 @@
 								"19",
 								""
 							]
-						}
+						},
+						"description": "This API will provide the details of the store pointed by the ID in the URL and if it is created by the user who is requesting it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -247,7 +274,8 @@
 								"stores",
 								""
 							]
-						}
+						},
+						"description": "This API will create a new store and tag it to the user who is generated the request. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -278,7 +306,8 @@
 								"1",
 								""
 							]
-						}
+						},
+						"description": "This API will update the details of the store pointed by the ID in the URL and if it is created by the user who is trying to update it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -300,7 +329,8 @@
 								"18",
 								""
 							]
-						}
+						},
+						"description": "This API will delete the store pointed by the ID in the URL and if it is created by the user who is trying to delete it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -321,7 +351,8 @@
 								"products",
 								""
 							]
-						}
+						},
+						"description": "This API will list all the available products created by the user. The API will also validate the access token provided in the authorization header and then provide the details related to the user who has requested the details."
 					},
 					"response": []
 				},
@@ -343,7 +374,8 @@
 								"101",
 								""
 							]
-						}
+						},
+						"description": "This API will provide the details of the product pointed by the ID in the URL and if it is created by the user who is requesting it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -373,7 +405,8 @@
 								"products",
 								""
 							]
-						}
+						},
+						"description": "This API will create a new product and tag it to the user who is generated the request. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -404,7 +437,8 @@
 								"101",
 								""
 							]
-						}
+						},
+						"description": "This API will update the details of the product pointed by the ID in the URL and if it is created by the user who is trying to update it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -426,7 +460,8 @@
 								"348",
 								""
 							]
-						}
+						},
+						"description": "This API will delete the product pointed by the ID in the URL and if it is created by the user who is trying to delete it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -447,7 +482,8 @@
 								"transactions",
 								""
 							]
-						}
+						},
+						"description": "This API will list all the available products created by the user. The API will also validate the access token provided in the authorization header and then provide the details related to the user who has requested the details."
 					},
 					"response": []
 				},
@@ -469,7 +505,8 @@
 								"101",
 								""
 							]
-						}
+						},
+						"description": "This API will provide the details of the transaction pointed by the ID in the URL and if it is created by the user who is requesting it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -499,7 +536,8 @@
 								"transactions",
 								""
 							]
-						}
+						},
+						"description": "This API will create a new transaction and tag it to the user who is generated the request. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -530,7 +568,8 @@
 								"101",
 								""
 							]
-						}
+						},
+						"description": "This API will update the details of the transaction pointed by the ID in the URL and if it is created by the user who is trying to update it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				},
@@ -552,11 +591,13 @@
 								"526",
 								""
 							]
-						}
+						},
+						"description": "This API will delete the transaction pointed by the ID in the URL and if it is created by the user who is trying to delete it. The API will also validate the access token provided in the authorization header."
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "This section covers all the core functionalities of the app. The APIs in this section are related to performing CRUD operations on Stores, Products and Transactions."
 		}
 	],
 	"auth": {
