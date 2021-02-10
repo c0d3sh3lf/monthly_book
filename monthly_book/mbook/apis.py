@@ -1,11 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from .serializers import StoreSerializer, ProductSerializer, TransactionSerializer
 from .models import Stores, Products, Transactions
 import jwt
-
+from datetime import datetime
 
 
 def verify_jwt(token):
@@ -78,6 +79,17 @@ class StoreViewSet(viewsets.ModelViewSet):
         else:
             return Response({"error":"Unable to verify user"}, status = status.HTTP_401_UNAUTHORIZED)
 
+    
+    @action(methods=['get'], detail=False)
+    def summary(self, request):
+        access_token = request.headers['Authorization'].split(" ")[1]
+        decoded_token = verify_jwt(access_token)
+        if request.user.id == decoded_token['user_id']:
+            queryset = Stores.objects.filter(created_by=request.user)
+            return Response({"item":"Stores", "count":len(queryset)}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error":"Unable to verify user"}, status = status.HTTP_401_UNAUTHORIZED)
+
 
 class ProductViewSet(viewsets.ModelViewSet):
 
@@ -141,6 +153,16 @@ class ProductViewSet(viewsets.ModelViewSet):
             Product = get_object_or_404(queryset, id=pk)
             Product.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"error":"Unable to verify user"}, status = status.HTTP_401_UNAUTHORIZED)
+
+    @action(methods=['get'], detail=False)
+    def summary(self, request):
+        access_token = request.headers['Authorization'].split(" ")[1]
+        decoded_token = verify_jwt(access_token)
+        if request.user.id == decoded_token['user_id']:
+            queryset = Products.objects.filter(created_by=request.user)
+            return Response({"item":"Products", "count":len(queryset)}, status=status.HTTP_200_OK)
         else:
             return Response({"error":"Unable to verify user"}, status = status.HTTP_401_UNAUTHORIZED)
 
@@ -209,3 +231,34 @@ class TransactionViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response({"error":"Unable to verify user"}, status = status.HTTP_401_UNAUTHORIZED)
+
+    @action(methods=['get'], detail=False)
+    def summary(self, request):
+        access_token = request.headers['Authorization'].split(" ")[1]
+        decoded_token = verify_jwt(access_token)
+        if request.user.id == decoded_token['user_id']:
+            queryset = Transactions.objects.filter(created_by=request.user)
+            current_month = datetime.now().month
+            current_year = datetime.now().year
+            current_month_transactions = queryset.filter(txn_dop__month=current_month, txn_dop__year=current_year)
+            regular_amount_current_month = 0.0
+            extra_amount_current_month = 0.0
+            total_amount_current_month = 0.0
+            for transaction in current_month_transactions:
+                if transaction.product.product_is_extra:
+                    extra_amount_current_month += transaction.txn_amount
+                else:
+                    regular_amount_current_month += transaction.txn_amount
+            total_amount_current_month = regular_amount_current_month + extra_amount_current_month
+            output_dict = {
+                "item":"Transactions",
+                "count":len(queryset),
+                "current_month_count":len(current_month_transactions),
+                "extra_amount_current_month":round(extra_amount_current_month, 2),
+                "regular_amount_current_month":round(regular_amount_current_month, 2),
+                "total_amount_current_month": round(total_amount_current_month, 2)
+            }
+            return Response(output_dict, status=status.HTTP_200_OK)
+        else:
+            return Response({"error":"Unable to verify user"}, status = status.HTTP_401_UNAUTHORIZED)
+
