@@ -3,3 +3,4 @@ monthly_book/media/
 **/.DS_Store
 venv/
 db.json
+ssl/
