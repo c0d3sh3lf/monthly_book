@@ -92,4 +92,11 @@ class LogoutView(APIView):
                 return Response(status = status.HTTP_403_FORBIDDEN)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class TestView(APIView):
+
+    permission_classes = (AllowAny, )
+    
+    def get(self, request):
+        return Response("{'message':'It works'}", status = status.HTTP_200_OK)
             
