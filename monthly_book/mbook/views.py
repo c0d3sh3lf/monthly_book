@@ -606,8 +606,8 @@ def generate_list_pdf(request):
                     g_data.append(['Sr. No.', 'R', 'P', 'Dry Fruits', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Dry Fruits', 'Item Qty.'])
                     counter += 1
                     if counter > 1:
-                        g_table_style_data.append(('BACKGROUND', (0, counter), (-1, counter), colors.black))
-                        g_table_style_data.append(('TEXTCOLOR', (0, counter), (-1, counter), colors.white))
+                        g_table_style_data.append(('BACKGROUND', (0, counter - 1), (-1, counter - 1), colors.black))
+                        g_table_style_data.append(('TEXTCOLOR', (0, counter - 1), (-1, counter - 1), colors.white))
                 if (counter-1) % 29 == 0:
                     g_data.append(['Sr. No.', 'R', 'P', 'Dry Fruits', 'Item Qty.', '', 'Sr. No.', 'R', 'P', 'Dry Fruits', 'Item Qty.'])
                     if counter > 1:
