@@ -7,6 +7,10 @@ from .serializers import StoreSerializer, ProductSerializer, TransactionSerializ
 from .models import Stores, Products, Transactions
 import jwt
 from datetime import datetime
+import barcode
+from barcode.writer import ImageWriter
+from io import BytesIO
+from django.core.files import File
 
 
 def verify_jwt(token):
@@ -122,7 +126,22 @@ class ProductViewSet(viewsets.ModelViewSet):
         if request.user.id == decoded_token['user_id']:
             serializer = ProductSerializer(data=request.data)
             if serializer.is_valid():
-                Product = Products.objects.create(**serializer.validated_data)
+                Product = Products(**serializer.validated_data)
+                Product.save()
+                if Product.product_code and (Product.product_code != "0" or Product.product_code != '' or Product.product_code != '0000000000000'):
+                    EAN = barcode.get_barcode_class('ean13')
+                    product_barcode = EAN(Product.product_code, writer=ImageWriter())
+                    buffer = BytesIO()
+                    product_barcode.write(buffer)
+                    Product.product_barcode.save(f"{Product.product_code}.png", File(buffer), save=False)
+                else:
+                    Product.product_code = "0000000000000"
+                    EAN = barcode.get_barcode_class('ean13')
+                    product_barcode = EAN(Product.product_code, writer=ImageWriter())
+                    buffer = BytesIO()
+                    product_barcode.write(buffer)
+                    Product.product_barcode.save(f"{Product.product_code}.png", File(buffer), save=False)
+                Product.save()
                 serializer = ProductSerializer(Product, many=False)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
@@ -137,6 +156,21 @@ class ProductViewSet(viewsets.ModelViewSet):
         if request.user.id == decoded_token['user_id']:
             queryset = Products.objects.filter(created_by=request.user)
             Product = get_object_or_404(queryset, id=pk)
+            if Product.product_code != request.data["product_code"]:
+                if request.data["product_code"] and (request.data["product_code"] != "0" or request.data["product_code"] != '' or request.data["product_code"] != '0000000000000'):
+                    EAN = barcode.get_barcode_class('ean13')
+                    product_barcode = EAN(request.data["product_code"], writer=ImageWriter())
+                    buffer = BytesIO()
+                    product_barcode.write(buffer)
+                    Product.product_barcode.save(f"{request.data['product_code']}.png", File(buffer), save=False)
+                else:
+                    Product.product_code = "0000000000000"
+                    EAN = barcode.get_barcode_class('ean13')
+                    product_barcode = EAN(Product.product_code, writer=ImageWriter())
+                    buffer = BytesIO()
+                    product_barcode.write(buffer)
+                    Product.product_barcode.save(f"{Product.product_code}.png", File(buffer), save=False)
+            Product.save()
             serializer = ProductSerializer(Product, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
