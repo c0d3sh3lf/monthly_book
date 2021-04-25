@@ -15,8 +15,8 @@ services:
       - monthly_book_db_data:/var/lib/mysql
   web:
     build: .
-    # command: python manage.py runsslserver --certificate ssl/ca-bundle.crt --key ssl/private-key.key 0.0.0.0:8000
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runsslserver --certificate ssl/ca-bundle.crt --key ssl/private-key.key 0.0.0.0:8000
+    # command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./monthly_book/:/app
     ports:
