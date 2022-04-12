@@ -4,7 +4,7 @@ django-session-timeout==0.1.0
 django-sslserver==0.22
 djangorestframework==3.13.1
 djangorestframework-simplejwt==4.8.0
-mysqlclient==2.0.3
+mysqlclient==2.1.0
 Pillow==9.0.1
 PyJWT==2.1.0
 python-barcode==0.13.1
